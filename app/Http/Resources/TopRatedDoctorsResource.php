@@ -20,7 +20,7 @@ class TopRatedDoctorsResource extends JsonResource
             'LastName'=> $this->last_name,
             'MedicalSpecialty'=> $this->medical_specialty,
             'Rating'=> $this->rating,
-            'Image' => Storage::url($this->image),        
+            'Image' => 'http://beige-wildcat-74200.zap.cloud/storage'.'$this->image',        
         ];
     }
 }
