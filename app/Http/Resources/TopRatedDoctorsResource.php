@@ -20,6 +20,7 @@ class TopRatedDoctorsResource extends JsonResource
             'Last Name'=> $this->last_name,
             'Medical Specialty'=> $this->medical_specialty,
             'Rating'=> $this->rating,
+            'Image'=> $this->image,
         ];
     }
 }

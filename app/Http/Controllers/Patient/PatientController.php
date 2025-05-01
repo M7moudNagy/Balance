@@ -41,4 +41,67 @@ class PatientController extends Controller
     }
 
 
+    public function consecutiveCommitmentDays($patientId)
+{
+    // الحصول على كافة المهام المكتملة للمريض مرتبة حسب تاريخ الإتمام
+    $completedTasks = PatientTask::where('patient_id', $patientId)
+                                ->whereNotNull('completed_at') // تأكد أن المهمة مكتملة
+                                ->orderBy('completed_at', 'asc') // ترتيبها حسب تاريخ الإتمام
+                                ->get();
+
+    // إذا لم توجد أي مهام مكتملة
+    if ($completedTasks->isEmpty()) {
+        return response()->json([
+            'patient_id' => $patientId,
+            'consecutive_commitment_days' => 0
+        ]);
+    }
+
+    // حساب الأيام المتتالية
+    $consecutiveDays = 1; // افترض أن اليوم الأول هو يوم التزام
+    $previousTaskDate = \Carbon\Carbon::parse($completedTasks->first()->completed_at);
+
+    foreach ($completedTasks->skip(1) as $task) {
+        $currentTaskDate = \Carbon\Carbon::parse($task->completed_at);
+
+        // إذا كان اليوم الحالي هو اليوم التالي مباشرة بعد اليوم السابق
+        if ($currentTaskDate->diffInDays($previousTaskDate) == 1) {
+            $consecutiveDays++;
+        } else {
+            // إذا انقطعت الأيام المتتالية
+            break;
+        }
+
+        $previousTaskDate = $currentTaskDate;
+    }
+
+    // إرجاع النتيجة
+    return response()->json([
+        'patient_id' => $patientId,
+        'consecutive_commitment_days' => $consecutiveDays
+    ]);
+}
+
+public function index($patientId)
+{
+    $tasks = PatientTask::where('patient_id', $patientId)->get();
+
+    $completedTasks = PatientTask::where('patient_id', $patientId)
+                                 ->where('status', 'complete')
+                                 ->count();
+
+    $totalTasks = $tasks->count();
+
+    $completionPercentage = 0;
+
+    if ($totalTasks > 0) {
+        $completionPercentage = ($completedTasks / $totalTasks) * 100;
+    }
+    return response()->json([
+        'patient_id' => $patientId,
+        'completed_tasks' => $completedTasks,
+        'completion_percentage' => $completionPercentage
+    ]);
+}
+
 }
