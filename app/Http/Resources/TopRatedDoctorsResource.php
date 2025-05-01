@@ -16,11 +16,11 @@ class TopRatedDoctorsResource extends JsonResource
     {
         return [
             'ID'=> $this->id,
-            'First Name'=> $this->first_name,
-            'Last Name'=> $this->last_name,
-            'Medical Specialty'=> $this->medical_specialty,
+            'FirstName'=> $this->first_name,
+            'LastName'=> $this->last_name,
+            'MedicalSpecialty'=> $this->medical_specialty,
             'Rating'=> $this->rating,
-            'Image'=> $this->image,
+            'Image' => Storage::url($this->image),        
         ];
     }
 }
