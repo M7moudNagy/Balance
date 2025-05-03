@@ -13,10 +13,14 @@ class PatientTask extends Model
     protected $casts = [
         'patient_id' => 'array',
     ];
-    public function patient(){
-        return $this->belongsToMany(Patient::class);
-    }
-    public function task(){
-        return $this->belongsToMany(Task::class);
-    }
+    public function patient()
+{
+    return $this->belongsTo(Patient::class, 'patient_id');
+}
+
+    public function task()
+{
+    return $this->belongsTo(Task::class, 'task_id');
+}
+
 }

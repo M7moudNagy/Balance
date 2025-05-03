@@ -49,6 +49,11 @@ class Doctor extends Authenticatable implements JWTSubject
     {
         return $this->morphMany(Massage::class, 'receiver');
     }
+    public function statistics()
+{
+    return $this->hasOne(DoctorStatistic::class);
+}
+
 
 
 }

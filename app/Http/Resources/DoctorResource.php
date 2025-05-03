@@ -13,34 +13,30 @@ class DoctorResource extends JsonResource
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
-    {
-        return [
-            "ID"=> $this->id,
-            "First Name"=> $this->first_name,
-            "Last Name"=> $this->last_name,
-            "Mobile Number"=> $this->mobile_number,
-            "Date Of Birth"=> $this->date_of_birth,
-            "Gender"=> $this->gender,
-            "Address"=> $this->address,
-            "Email"=> $this->email,
-//        "governorate": "القاهرة",
-//        "medical_specialty": "Cardiology",
-//        "years_of_experience": "10",
-//        "type_of_practice": "Private",
-//        "facility_name": "Heart Care Clinic",
-//        "facility_address": "456 شارع الثورة, الجيزة",
-//        "facility_governorate": "الجيزة",
-//        "medical_license_number": "ML123456789",
-//        "medical_license": "uploads/doctors/NmcDdEmOZA0S5LveEs8vIbwciqUjA7x1dhmLnL4Z.jpg",
-//        "graduation_certificate": "uploads/doctors/dDWxU6pNorqnmiFT1Ofep2P0mvBzEwPWVw02UuBD.jpg",
-//        "national_id_or_passport": "uploads/doctors/7AlAsPWi3BGWEPzLOZGZ9MHfzRXynXW78znH3wfb.jpg",
-//        "motivation": "أرغب في مساعدة المرضى وتحسين الرعاية الصحية.",
-//        "balance_help": "أساهم في توعية المجتمع بأمراض القلب.",
-//        "licensed_provider": true,
-//        "agree_terms": true,
-//        "updated_at": "2025-03-04T22:29:49.000000Z",
-//        "Created At" => $this->created_at,
-//        "ID": $this->id,
-        ];
-    }
+{
+    return [
+        // "ID" => $this->id,
+        "FullName" => $this->fullname,
+        // "PhoneNumber" => $this->phone_number,
+        // "Email" => $this->email,
+        // "Gender" => $this->gender,
+        "Specialization" => $this->specialization,
+        // "Medical_License_Number" => $this->medical_license_number,
+        "Years_of_Experience" => $this->years_of_experience,
+        // "Clinic_Or_Hospital_Name" => $this->clinic_or_hospital_name,
+        // "Work_Address" => $this->work_address,
+        // "Available_Working_Hours" => $this->available_working_hours,
+        "Image" => $this->image ? asset('storage/' . $this->image) : null,
+
+        "Statistics" => [
+        "Number of Patients" => $this->statistics->patients_count ?? 0,  
+        // "Rating Sum" => $this->statistics->rating_total ?? 0,  
+        "Average Rating" => $this->statistics && $this->statistics->rating_count > 0
+        ? round($this->statistics->rating_total / $this->statistics->rating_count, 2) 
+        : 0,
+        "Views" => $this->statistics->views ?? 0,
+]
+    ];
+}
+
 }

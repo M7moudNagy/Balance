@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('task_id')->constrained();
             $table->foreignId('patient_id')->constrained();
             $table->enum('status', ['Pending', 'In Progress', 'Completed','Overdue'])->default('Pending');
+            $table->timestamp('completed_at')->nullable();
             $table->timestamps();
         });
     }

@@ -160,33 +160,42 @@ class TaskController extends Controller
     }
 
     public function updateTaskStatus(Request $request, $taskId, $patientId)
-    {
-        $request->validate([
-            'status' => 'required|in:pending,in_progress,completed,over_due'
-        ]);
+{
+    $request->validate([
+        'status' => 'required|in:pending,in_progress,completed,over_due'
+    ]);
 
-        $task = Task::findOrFail($taskId);
+    $task = Task::findOrFail($taskId);
 
-        // تأكد إن المريض مرتبط بالمهمة
-        if (!$task->patients()->where('patient_id', $patientId)->exists()) {
-            return response()->json(['message' => 'Patient not assigned to this task'], 404);
-        }
-
-        $currentStatus = $task->patients()->where('patient_id', $patientId)->first()->pivot->status;
-        $newStatus = $request->status;
-
-        // منطق الحماية:
-        if ($newStatus === 'in_progress' && $currentStatus !== 'pending') {
-            return response()->json(['message' => 'Task can only move to in_progress from pending'], 400);
-        }
-
-        if ($newStatus === 'completed' && $currentStatus === 'completed') {
-            return response()->json(['message' => 'Task already completed'], 400);
-        }
-
-        // تحديث الحالة
-        $task->patients()->updateExistingPivot($patientId, ['status' => $newStatus]);
-        return response()->json(['message' => "Task marked as {$newStatus} for patient"]);
+    // تأكد إن المريض مرتبط بالمهمة
+    if (!$task->patients()->where('patient_id', $patientId)->exists()) {
+        return response()->json(['message' => 'Patient not assigned to this task'], 404);
     }
+
+    $currentStatus = $task->patients()->where('patient_id', $patientId)->first()->pivot->status;
+    $newStatus = $request->status;
+
+    // منطق الحماية:
+    if ($newStatus === 'in_progress' && $currentStatus !== 'pending') {
+        return response()->json(['message' => 'Task can only move to in_progress from pending'], 400);
+    }
+
+    if ($newStatus === 'completed' && $currentStatus === 'completed') {
+        return response()->json(['message' => 'Task already completed'], 400);
+    }
+
+    // منطق تحديث completed_at عند تغيير الحالة إلى "completed"
+    if ($newStatus === 'completed' && $currentStatus !== 'completed') {
+        $task->patients()->updateExistingPivot($patientId, [
+            'status' => $newStatus,
+            'completed_at' => now()  // تعيين التاريخ والوقت الحالي
+        ]);
+    } else {
+        // تحديث الحالة فقط إذا لم تكن "completed"
+        $task->patients()->updateExistingPivot($patientId, ['status' => $newStatus]);
+    }
+
+    return response()->json(['message' => "Task marked as {$newStatus} for patient"]);
+}
 
 }

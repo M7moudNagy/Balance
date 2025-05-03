@@ -22,9 +22,12 @@ use mysql_xdevapi\Collection;
 class DoctorController extends Controller
 {
     public function index()
-    {
-        return DoctorResource::collection(Doctor::all());
-    }
+{
+    return DoctorResource::collection(
+        Doctor::with('statistics')->get()
+    );
+}
+
 
     public function store(Request $request)
     {
@@ -134,11 +137,21 @@ class DoctorController extends Controller
 
     }
     public function my_patients($id)
-    {
-        $patients = Patient::where('doctor_id',$id)->get();
-        return response()->json(["My Patients"=>$patients]);
-//        return new DoctorResource(["My Patients"=>$patients]);
-    }
+{
+    $doctor = Doctor::findOrFail($id);
+    $patients = $doctor->patients;
+
+    // إزالة pivot
+    $patients->each(function ($patient) {
+        unset($patient->pivot);
+    });
+
+    return response()->json([
+        'doctor' => $doctor,
+    ]);
+}
+
+
     public function my_patients_tasks($id)
     {
         $patient = Patient::with(['tasks' => function($q) {
