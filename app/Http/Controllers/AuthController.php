@@ -35,7 +35,7 @@ class AuthController extends Controller
         $request->validate([
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:patients,email',
-            'phoneNumber' => 'required|string|unique:patients,phoneNumber',
+            'phoneNumber' => 'required|string',
             'age' => 'required|numeric',
             'city' => 'required|string',
             'password' => 'required|min:6|confirmed',
@@ -45,7 +45,7 @@ class AuthController extends Controller
         ]);
 
         $avatarName = $request->avatar ? $request->avatar . '.png' : null;
-
+        // dd($avatarName);
         if ($avatarName && !Storage::exists('public/avatars/' . $avatarName)) {
             return response()->json(['message' => 'Invalid avatar selected'], 422);
         }
@@ -59,6 +59,8 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'gander' => $request->gander,
             'avatar' => $avatarName,
+            'phoneNumber' => $request->phoneNumber,
+
         ]);
 
         // $avatar_url = $request->avatar ? asset('storage/avatars/' . $request->avatar) : null;
