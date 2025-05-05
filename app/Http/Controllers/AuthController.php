@@ -41,7 +41,7 @@ class AuthController extends Controller
             'password' => 'required|min:6|confirmed',
             'gander' => 'required|string',
             'nickname' => 'required|string|max:40',
-            'avatar' => 'nullable|string',
+            'avatar' => 'nullable|integer',
         ]);
 
         $avatarName = $request->avatar ? $request->avatar . '.png' : null;

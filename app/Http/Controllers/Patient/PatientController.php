@@ -36,7 +36,7 @@ class PatientController extends Controller
             'password' => 'sometimes|nullable|min:6|confirmed',
             'gander' => 'sometimes|required|string',
             'nickname' => 'sometimes|required|string|max:40',
-            'avatar' => 'nullable|string',
+            'avatar' => 'nullable|integer',
         ]);
 
         if ($request->has('password') && $request->filled('password')) {
