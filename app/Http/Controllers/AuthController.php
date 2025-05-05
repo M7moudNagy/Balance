@@ -45,8 +45,9 @@ class AuthController extends Controller
         ]);
 
         $avatarName = $request->avatar ? $request->avatar . '.png' : null;
-        // dd($avatarName);
-        if ($avatarName && !Storage::exists('public/avatars/' . $avatarName)) {
+
+        if (!Storage::exists('public/avatars/' . $avatarName)) {
+            
             return response()->json(['message' => 'Invalid avatar selected'], 422);
         }
 
