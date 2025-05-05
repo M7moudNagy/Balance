@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DoctorStatistic extends Model
 {
     use HasFactory;
-    protected $fillable = ['doctor_id', 'rating_sum', 'rating_count', 'views'];
+    protected $guarded = [];
 
     public function doctor()
     {
@@ -19,5 +19,11 @@ class DoctorStatistic extends Model
     {
         return $this->rating_count > 0 ? round($this->rating_sum / $this->rating_count, 1) : 0;
     }
+    public function updatePatientCount()
+    {
+        $this->patients_count = $this->doctor->patients()->count(); 
+        $this->save();
+    }
+    
 }
 

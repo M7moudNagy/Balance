@@ -9,6 +9,7 @@ use App\Models\DoctorStatistic;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\PatientResource;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -34,15 +35,21 @@ class AuthController extends Controller
         $request->validate([
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:patients,email',
+            'phoneNumber' => 'required|string|unique:patients,phoneNumber',
             'age' => 'required|numeric',
             'city' => 'required|string',
             'password' => 'required|min:6|confirmed',
             'gander' => 'required|string',
             'nickname' => 'required|string|max:40',
-            'avatar' => 'nullable|string', // هنا هيكون اسم صورة فقط
+            'avatar' => 'nullable|string',
         ]);
 
-        // إنشاء المريض
+        $avatarName = $request->avatar ? $request->avatar . '.png' : null;
+
+        if ($avatarName && !Storage::exists('public/avatars/' . $avatarName)) {
+            return response()->json(['message' => 'Invalid avatar selected'], 422);
+        }
+
         $patient = Patient::create([
             'fullname' => $request->fullname,
             'nickname'=> $request->nickname,
@@ -51,8 +58,11 @@ class AuthController extends Controller
             'city' => $request->city,
             'password' => Hash::make($request->password),
             'gander' => $request->gander,
-            'avatar' => $request->avatar, // اسم الصورة المختارة
+            'avatar' => $avatarName,
         ]);
+
+        // $avatar_url = $request->avatar ? asset('storage/avatars/' . $request->avatar) : null;
+
 
         // تسجيل دخول تلقائي بعد التسجيل
 //        $token = Auth::guard('patient')->login($patient);
@@ -86,7 +96,7 @@ class AuthController extends Controller
     {
         $validatedData = $request->validate([
             'fullname' => 'required|string',
-            'phone_number' => 'required|string',
+            'phone_number' => 'required|string|unique:doctors,phone_number',
             'email' => 'required|email|unique:doctors,email',
             'password' => 'required|string|min:8|confirmed',
             'specialization' => 'required|string',

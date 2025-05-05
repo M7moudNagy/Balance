@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('fullname');
             $table->string('nickname');
             $table->string('age');
+            $table->string('phoneNumber');
             $table->enum('gander', ['Male', 'Female'])->default('male');
             $table->string('city');
             $table->string('email')->unique();

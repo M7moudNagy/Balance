@@ -15,8 +15,6 @@ use App\Http\Controllers\Doctor\DoctorController;
 use App\Http\Controllers\DoctorStatisticController;
 use App\Http\Controllers\DoctorPatientController;
 
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\TipController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\QuestionController;
@@ -30,6 +28,9 @@ use App\Http\Controllers\MassageController;
 */
 Route::prefix('patient')->group(function () {
     Route::post('/register', [AuthController::class, 'registerPatient']);
+    Route::get('/{id}', [PatientController::class, 'show']); 
+    Route::put('/{id}', [PatientController::class, 'update']); 
+    Route::delete('/{id}', [PatientController::class, 'destroy']);
     Route::post('/login', [AuthController::class, 'loginPatient']);
 });
 Route::prefix('doctor')->group(function () {
@@ -55,9 +56,7 @@ Route::middleware(['auth:doctor', 'user.type:doctor'])->get('/doctor/dashboard',
 | Resources
 |--------------------------------------------------------------------------
 */
-Route::resource('/category', CategoryController::class);
 Route::resource('/task', TaskController::class);
-Route::resource('/tip', TipController::class);
 Route::resource('/form', FormController::class);
 Route::resource('/question', QuestionController::class);
 Route::resource('/response', ResponseController::class);
@@ -94,7 +93,9 @@ Route::get('/tasks/{patient_id}', [PatientController::class, 'index']);
 | Doctor & Patient Relationship
 |--------------------------------------------------------------------------
 */
-Route::post('/assign-doctor', [DoctorPatientController::class, 'assignDoctorToPatient']);
+Route::get('/assign-doctor/{doctor_id}', [DoctorPatientController::class, 'assignDoctorToPatient']);
+Route::get('/assigned-patient/details', [DoctorPatientController::class, 'getPatientDetailsForAssignment']);
+Route::get('/unassigned-doctor/{doctor_id}', [DoctorPatientController::class, 'unassignDoctorFromPatient']);
 Route::get('/my_patient/{id}', [DoctorController::class, 'my_patients']);
 Route::get('/my_patient_tasks/{id}', [DoctorController::class, 'my_patients_tasks']);
 Route::get('/my_patient_tips/{id}', [DoctorController::class, 'my_patients_tips']);

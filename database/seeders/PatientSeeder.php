@@ -18,6 +18,7 @@ class PatientSeeder extends Seeder
             [
                 "fullname"=> "Ahmed Mohamed",
                 "nickname"=> "Ali",
+                "phoneNumber" => "01099594809",
                 "age"=> "22",
                 "password"=> bcrypt("123456789"),
                 "gander"=> "Male",
@@ -28,6 +29,7 @@ class PatientSeeder extends Seeder
             [
                 "fullname"=> "Mohamed Tarek",
                 "nickname"=> "Mo",
+                "phoneNumber" => "01099594809",
                 "age"=> "25",
                 "password"=> bcrypt("123456789"),
                 "gander"=> "Male",
@@ -38,6 +40,7 @@ class PatientSeeder extends Seeder
             [
                 "fullname"=> "Ali Hassan",
                 "nickname"=> "Hassouna",
+                "phoneNumber" => "01099594809",
                 "age"=> "28",
                 "password"=> bcrypt("123456789"),
                 "gander"=> "Male",
@@ -48,6 +51,7 @@ class PatientSeeder extends Seeder
             [
                 "fullname"=> "Sara Adel",
                 "nickname"=> "Soso",
+                "phoneNumber" => "01099594809",
                 "age"=> "20",
                 "password"=> bcrypt("123456789"),
                 "gander"=> "Female",
@@ -58,6 +62,7 @@ class PatientSeeder extends Seeder
             [
                 "fullname"=> "Laila Ahmed",
                 "nickname"=> "Lilo",
+                "phoneNumber" => "01099594809",
                 "age"=> "23",
                 "password"=> bcrypt("123456789"),
                 "gander"=> "Female",
@@ -68,6 +73,7 @@ class PatientSeeder extends Seeder
             [
                 "fullname"=> "Hossam Gamal",
                 "nickname"=> "Sam",
+                "phoneNumber" => "01099594809",
                 "age"=> "26",
                 "password"=> bcrypt("123456789"),
                 "gander"=> "Male",
@@ -78,6 +84,7 @@ class PatientSeeder extends Seeder
             [
                 "fullname"=> "Nour Hassan",
                 "nickname"=> "Nour",
+                "phoneNumber" => "01099594809",
                 "age"=> "21",
                 "password"=> bcrypt("123456789"),
                 "gander"=> "Female",
@@ -88,6 +95,7 @@ class PatientSeeder extends Seeder
             [
                 "fullname"=> "Karim Said",
                 "nickname"=> "Kimo",
+                "phoneNumber" => "01099594809",
                 "age"=> "29",
                 "password"=> bcrypt("123456789"),
                 "gander"=> "Male",
@@ -98,6 +106,7 @@ class PatientSeeder extends Seeder
             [
                 "fullname"=> "Salma Yasser",
                 "nickname"=> "Sally",
+                "phoneNumber" => "01099594809",
                 "age"=> "24",
                 "password"=> bcrypt("123456789"),
                 "gander"=> "Female",
@@ -108,6 +117,7 @@ class PatientSeeder extends Seeder
             [
                 "fullname"=> "Tamer Fathy",
                 "nickname"=> "Timo",
+                "phoneNumber" => "01099594809",
                 "age"=> "30",
                 "password"=> bcrypt("123456789"),
                 "gander"=> "Male",

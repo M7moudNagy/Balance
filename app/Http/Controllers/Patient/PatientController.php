@@ -2,162 +2,181 @@
 
 namespace App\Http\Controllers\Patient;
 
-use App\Http\Controllers\Controller;
+use App\Models\Tip;
+use App\Models\Task;
 use App\Models\Patient;
 use App\Models\PatientTask;
-use App\Models\Task;
-use App\Models\Tip;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Resources\PatientResource;
+use Illuminate\Http\Request as HttpRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PatientController extends Controller
 {
-    public function viewTip($tipId)
+
+    public function show($id)
     {
-        $patientId = request()->get('patient_id', 1); // بدل 1 بـ أي ID عايزه، أو بعت الـ ID في البوستمان
+        $patient = Patient::findOrFail($id); 
 
-        // لما تفعل auth:
-        // $patientId = auth()->id();
+        return new PatientResource($patient);
+    }
+    public function update(Request $request, $id)
+    {
+        $patient = Patient::findOrFail($id);
 
-        $pivotData = DB::table('patient_tip')
+        $request->validate([
+            'fullname' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|email|unique:patients,email,' . $id,
+            'phoneNumber' => 'sometimes|required|string|unique:patients,phoneNumber,' . $id,
+            'age' => 'sometimes|required|numeric',
+            'city' => 'sometimes|required|string',
+            'password' => 'sometimes|nullable|min:6|confirmed',
+            'gander' => 'sometimes|required|string',
+            'nickname' => 'sometimes|required|string|max:40',
+            'avatar' => 'nullable|string',
+        ]);
+
+        if ($request->has('password') && $request->filled('password')) {
+            $data['password'] = Hash::make($request->password); 
+        }
+
+        if ($request->has('avatar')) {
+            $avatarName = $request->avatar . '.png';
+            if (!Storage::exists('public/avatars/' . $avatarName)) {
+                return response()->json(['message' => 'Invalid avatar selected'], 422);
+            }
+            $data['avatar'] = $avatarName;
+        }
+
+        $patient->update($data);
+
+        return new PatientResource($patient);
+    }
+    public function destroy($id)
+    {
+        $patient = Patient::findOrFail($id);
+
+        $doctor = $patient->doctors()->first();
+        if ($doctor) {
+            $patient->doctors()->detach($doctor->id);
+            $doctor->updatePatientCount();
+        }
+
+        $patient->delete();
+
+        return response()->json(['message' => 'Patient deleted successfully']);
+    }
+    public function consecutiveCommitmentDays($patientId)
+    {
+        $completedTasks = PatientTask::where('patient_id', $patientId)
+                                    ->where('status', 'completed') 
+                                    ->orderBy('updated_at', 'asc') 
+                                    ->get();
+
+        // إذا ما فيش مهام مكتملة، إرجاع 0
+        if ($completedTasks->isEmpty()) {
+            return 0;
+        }
+
+        $consecutiveDays = 1; // البداية من يوم واحد كأول يوم ملتزم
+        $previousTaskDate = null;
+
+        foreach ($completedTasks as $task) {
+            $taskDate = $task->updated_at->toDateString(); // تاريخ المهمة المُكتملة (يفضل استخدام التاريخ المحدَّث)
+
+            // إذا كان التاريخ الحالي للمهمة يختلف عن التاريخ السابق، نعتبرها يوم جديد
+            if ($previousTaskDate && $previousTaskDate != $taskDate) {
+                // إذا الفرق يوم واحد
+                if (now()->subDay()->toDateString() == $taskDate) {
+                    $consecutiveDays++;
+                } else {
+                    break; // لو مش يوم متتالي، خلصنا الحساب
+                }
+            }
+
+            $previousTaskDate = $taskDate;
+        }
+
+        return $consecutiveDays;
+    }
+    public function index($patientId)
+    {
+        $tasks = PatientTask::where('patient_id', $patientId)->get();
+
+        $totalTasks = $tasks->count();
+        $completedTasks = $tasks->where('status', 'Completed')->count();
+
+        $completionPercentage = 0;
+        if ($totalTasks > 0) {
+            $completionPercentage = ($completedTasks / $totalTasks) * 100;
+        }
+
+        $consecutiveDays = $this->consecutiveCommitmentDays($patientId);
+
+        $pendingTasks = PatientTask::with('task')
             ->where('patient_id', $patientId)
-            ->where('tip_id', $tipId)
-            ->first();
+            ->where('status', 'Pending')
+            ->get()
+            ->map(function ($pt) {
+                return [
+                    'task_id' => $pt->task_id,
+                    'title' => $pt->task->title ?? null,
+                    'description' => $pt->task->description ?? null,
+                    'status' => $pt->status,
+                ];
+            });
 
-        if (! $pivotData) {
-            return response()->json(['message' => 'Not found or unauthorized'], 404);
-        }
+        $inprogressTasks = PatientTask::with('task')
+            ->where('patient_id', $patientId)
+            ->where('status', 'In Progress')
+            ->get()
+            ->map(function ($pt) {
+                return [
+                    'task_id' => $pt->task_id,
+                    'title' => $pt->task->title ?? null,
+                    'description' => $pt->task->description ?? null,
+                    'status' => $pt->status,
+                ];
+            });
 
-        if ($pivotData->status === 'unread') {
-            DB::table('patient_tip')
-                ->where('patient_id', $patientId)
-                ->where('tip_id', $tipId)
-                ->update(['status' => 'read']);
-        }
+        $completedTasksData = PatientTask::with('task')
+            ->where('patient_id', $patientId)
+            ->where('status', 'Completed')
+            ->get()
+            ->map(function ($pt) {
+                return [
+                    'task_id' => $pt->task_id,
+                    'title' => $pt->task->title ?? null,
+                    'description' => $pt->task->description ?? null,
+                    'status' => $pt->status,
+                    'completed_at' => $pt->completed_at,
+                ];
+            });
 
-        $tip = Tip::find($tipId);
+        $overdueTasks = PatientTask::with('task')
+            ->where('patient_id', $patientId)
+            ->where('status', 'Overdue')
+            ->get()
+            ->map(function ($pt) {
+                return [
+                    'task_id' => $pt->task_id,
+                    'title' => $pt->task->title ?? null,
+                    'description' => $pt->task->description ?? null,
+                    'status' => $pt->status,
+                ];
+            });
 
         return response()->json([
-            'tip' => $tip,
-            'status' => 'read'
+            'patient_id' => $patientId,
+            'completion_percentage' => $completionPercentage,
+            'consecutive_commitment_days' => $consecutiveDays,
+            'pendingTasks' => $pendingTasks,
+            'inprogressTasks' => $inprogressTasks,
+            'completedTasks' => $completedTasksData,
+            'overdueTasks' => $overdueTasks,
         ]);
     }
-
-
-    public function consecutiveCommitmentDays($patientId)
-{
-    // الحصول على جميع المهام المكتملة
-    $completedTasks = PatientTask::where('patient_id', $patientId)
-                                 ->where('status', 'completed') // باستخدام status بدلاً من completed_at
-                                 ->orderBy('updated_at', 'asc') // ترتيب المهام حسب آخر تعديل
-                                 ->get();
-
-    // إذا ما فيش مهام مكتملة، إرجاع 0
-    if ($completedTasks->isEmpty()) {
-        return 0;
-    }
-
-    $consecutiveDays = 1; // البداية من يوم واحد كأول يوم ملتزم
-    $previousTaskDate = null;
-
-    foreach ($completedTasks as $task) {
-        $taskDate = $task->updated_at->toDateString(); // تاريخ المهمة المُكتملة (يفضل استخدام التاريخ المحدَّث)
-
-        // إذا كان التاريخ الحالي للمهمة يختلف عن التاريخ السابق، نعتبرها يوم جديد
-        if ($previousTaskDate && $previousTaskDate != $taskDate) {
-            // إذا الفرق يوم واحد
-            if (now()->subDay()->toDateString() == $taskDate) {
-                $consecutiveDays++;
-            } else {
-                break; // لو مش يوم متتالي، خلصنا الحساب
-            }
-        }
-
-        $previousTaskDate = $taskDate;
-    }
-
-    return $consecutiveDays;
-}
-
-
-public function index($patientId)
-{
-    $tasks = PatientTask::where('patient_id', $patientId)->get();
-
-    $totalTasks = $tasks->count();
-    $completedTasks = $tasks->where('status', 'Completed')->count();
-
-    $completionPercentage = 0;
-    if ($totalTasks > 0) {
-        $completionPercentage = ($completedTasks / $totalTasks) * 100;
-    }
-
-    $consecutiveDays = $this->consecutiveCommitmentDays($patientId);
-
-    // المهام المعلقة
-    $pendingTasks = PatientTask::with('task')
-        ->where('patient_id', $patientId)
-        ->where('status', 'Pending')
-        ->get()
-        ->map(function ($pt) {
-            return [
-                'task_id' => $pt->task_id,
-                'title' => $pt->task->title ?? null,
-                'description' => $pt->task->description ?? null,
-                'status' => $pt->status,
-            ];
-        });
-
-    // المهام قيد التنفيذ
-    $inprogressTasks = PatientTask::with('task')
-        ->where('patient_id', $patientId)
-        ->where('status', 'In Progress')
-        ->get()
-        ->map(function ($pt) {
-            return [
-                'task_id' => $pt->task_id,
-                'title' => $pt->task->title ?? null,
-                'description' => $pt->task->description ?? null,
-                'status' => $pt->status,
-            ];
-        });
-
-    // المهام المنتهية
-    $completedTasksData = PatientTask::with('task')
-        ->where('patient_id', $patientId)
-        ->where('status', 'Completed')
-        ->get()
-        ->map(function ($pt) {
-            return [
-                'task_id' => $pt->task_id,
-                'title' => $pt->task->title ?? null,
-                'description' => $pt->task->description ?? null,
-                'status' => $pt->status,
-                'completed_at' => $pt->completed_at,
-            ];
-        });
-
-    // المهام المتأخرة
-    $overdueTasks = PatientTask::with('task')
-        ->where('patient_id', $patientId)
-        ->where('status', 'Overdue')
-        ->get()
-        ->map(function ($pt) {
-            return [
-                'task_id' => $pt->task_id,
-                'title' => $pt->task->title ?? null,
-                'description' => $pt->task->description ?? null,
-                'status' => $pt->status,
-            ];
-        });
-
-    return response()->json([
-        'patient_id' => $patientId,
-        'completion_percentage' => $completionPercentage,
-        'consecutive_commitment_days' => $consecutiveDays,
-        'pendingTasks' => $pendingTasks,
-        'inprogressTasks' => $inprogressTasks,
-        'completedTasks' => $completedTasksData,
-        'overdueTasks' => $overdueTasks,
-    ]);
-}
 }   

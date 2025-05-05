@@ -48,7 +48,7 @@ return [
 //                // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
 //            ],
 //        ],
-        'pusher' => [
+                'pusher' => [
             'driver' => 'pusher',
             'key' => env('PUSHER_APP_KEY'),
             'secret' => env('PUSHER_APP_SECRET'),
@@ -56,11 +56,13 @@ return [
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
                 'useTLS' => false,
-                'host' => '127.0.0.1',
-                'port' => 6001,
-                'scheme' => 'http',
+                'host' => env('PUSHER_HOST', '127.0.0.1'),
+                'port' => env('PUSHER_PORT', 6001),
+                'scheme' => env('PUSHER_SCHEME', 'http'),
+                'encrypted' => false,
             ],
         ],
+
 
         'ably' => [
             'driver' => 'ably',

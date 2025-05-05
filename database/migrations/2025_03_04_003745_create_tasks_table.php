@@ -18,7 +18,6 @@ return new class extends Migration
             $table->date('assign_date');
             $table->date('target_date');
             $table->string('repeat');
-            $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->json('days')->nullable();
             $table->string('notes')->nullable();
             $table->foreignId('doctor_id')->constrained();

@@ -31,18 +31,6 @@ class Patient extends Authenticatable implements JWTSubject
             ->withPivot('status')
             ->withTimestamps();
     }
-    public function tips()
-    {
-        return $this->belongsToMany(Tip::class, 'patient_tip')
-            ->withPivot('status')
-            ->withTimestamps();
-    }
-    public function forms()
-    {
-        return $this->belongsToMany(Tip::class, 'patient_forms')
-        ->withPivot('status')
-        ->withTimestamps();
-    }
     public function sentMessages()
     {
         return $this->morphMany(Massage::class, 'sender');
