@@ -12,7 +12,9 @@ class DoctorPatientController extends Controller
     public function assignDoctorToPatient($doctor_id)
     {
         $user = auth('patient')->user();
-        $patient_id = $user->id;
+        // $patient_id = $user->id;
+        $patient_id = 3;
+        
     
         $patient = Patient::find($patient_id);
         if (!$patient) {
@@ -38,7 +40,7 @@ class DoctorPatientController extends Controller
     public function getPatientDetailsForAssignment()
     {
         $user = auth('patient')->user();
-        $check_assign = DoctorPatient::where('patient_id', 1)
+        $check_assign = DoctorPatient::where('patient_id', $user->id)
         ->first();
 
         if (!$check_assign) {
@@ -62,6 +64,8 @@ class DoctorPatientController extends Controller
     {
         $user = auth('patient')->user();
         $patient_id = $user->id;
+        // $patient_id = 3;
+
 
         $patient = Patient::find($patient_id);
         if (!$patient) {

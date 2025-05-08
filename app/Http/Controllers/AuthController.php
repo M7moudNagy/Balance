@@ -9,6 +9,7 @@ use App\Models\DoctorStatistic;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\PatientResource;
+use App\Models\DoctorPatient;
 use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
@@ -23,12 +24,26 @@ class AuthController extends Controller
         if (!$token = Auth::guard('patient')->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
+        $patient = Patient::where('email',$request->email)->first();
+
+        $has_doctor = DoctorPatient::where('user_id',$patient->id);
+        if($has_doctor){
+             
 
         return response()->json([
             'token' => $token,
-//            'user' => Auth::guard('patient')->user()
+            'hasDoctor' => true,
             'user' => new PatientResource(Auth::guard('patient')->user())
         ]);
+         }else{
+
+        return response()->json([
+            'token' => $token,
+            'hasDoctor' => false,
+            'user' => new PatientResource(Auth::guard('patient')->user())
+        ]);
+    }
+
     }
     public function registerPatient(Request $request)
     {
