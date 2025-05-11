@@ -93,7 +93,7 @@ Route::get('/tasks/{patient_id}', [PatientController::class, 'index']);
 | Doctor & Patient Relationship
 |--------------------------------------------------------------------------
 */
-Route::get('/assign-doctor/{doctor_id}', [DoctorPatientController::class, 'assignDoctorToPatient']);
+Route::post('/assign-doctor/{doctor_id}', [DoctorPatientController::class, 'assignDoctorToPatient']);
 Route::get('/assigned-patient/details', [DoctorPatientController::class, 'getPatientDetailsForAssignment'])->middleware('auth');
 Route::get('/unassigned-doctor/{doctor_id}', [DoctorPatientController::class, 'unassignDoctorFromPatient']);
 Route::get('/my_patients', [DoctorController::class, 'my_patients']);
