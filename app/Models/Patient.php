@@ -20,11 +20,12 @@ class Patient extends Authenticatable implements JWTSubject
     {
         return ['role' => 'patient'];
     }
-    public function doctors()
+        public function doctors()
     {
-        return $this->belongsToMany(Doctor::class, 'doctor_patients');
+        return $this->belongsToMany(Doctor::class, 'doctor_patients')
+                    ->withPivot('fullname', 'email', 'phoneNumber', 'age', 'typeOfAddiction','status','durationOfAddication')
+                    ->withTimestamps();
     }
-
     public function tasks()
     {
         return $this->belongsToMany(Task::class, 'patients_tasks')

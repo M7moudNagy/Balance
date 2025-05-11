@@ -15,13 +15,14 @@ class TopRatedDoctorsResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // dd($this->statistic, $this->statistic->average_rating);
+
         return [
-            'ID'=> $this->id,
-            'FirstName'=> $this->first_name,
-            'LastName'=> $this->last_name,
-            'MedicalSpecialty'=> $this->medical_specialty,
-            'Rating'=> $this->rating,
-            'Image' => Storage::url($this->image),        
+            'ID' => $this->id,
+            'fullname' => $this->fullname,
+            'specialization' => $this->specialization,
+            'Rating' => optional($this->statistic)->average_rating ?? 0,
+            'Image' => Storage::url($this->image),
         ];
     }
 }

@@ -15,12 +15,22 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('doctor_id');
             $table->unsignedBigInteger('patient_id');
+            $table->string('fullname');
+            $table->string('email');
+            $table->string('phoneNumber');
+            $table->integer('age');
+            $table->string('typeOfAddiction');
+            $table->enum('status',['Under Treatment','Partial Recovery','Full Recovery'])->default('Under Treatment');
+            $table->integer('durationOfAddication');
+
+
             $table->timestamps();
             // علاقات الـ foreign keys
             $table->foreign('doctor_id')->references('id')->on('doctors')->onDelete('cascade');
             $table->foreign('patient_id')->references('id')->on('patients')->onDelete('cascade');
             // عشان تمنع تكرار نفس العلاقة
             $table->unique(['doctor_id', 'patient_id']);
+
         });
     }
 

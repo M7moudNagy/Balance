@@ -94,11 +94,12 @@ Route::get('/tasks/{patient_id}', [PatientController::class, 'index']);
 |--------------------------------------------------------------------------
 */
 Route::get('/assign-doctor/{doctor_id}', [DoctorPatientController::class, 'assignDoctorToPatient']);
-Route::get('/assigned-patient/details', [DoctorPatientController::class, 'getPatientDetailsForAssignment']);
+Route::get('/assigned-patient/details', [DoctorPatientController::class, 'getPatientDetailsForAssignment'])->middleware('auth');
 Route::get('/unassigned-doctor/{doctor_id}', [DoctorPatientController::class, 'unassignDoctorFromPatient']);
-Route::get('/my_patient/{id}', [DoctorController::class, 'my_patients']);
+Route::get('/my_patients', [DoctorController::class, 'my_patients']);
+Route::get('/my_patient/{patient_id}', [DoctorController::class, 'getPatientById']);
+Route::put('/doctor/patients/{patient_id}/status', [DoctorController::class, 'updatePatientStatus']);
 Route::get('/my_patient_tasks/{id}', [DoctorController::class, 'my_patients_tasks']);
-Route::get('/my_patient_tips/{id}', [DoctorController::class, 'my_patients_tips']);
 Route::get('/my_patient_forms/{id}', [DoctorController::class, 'my_patients_forms']);
 
 /*

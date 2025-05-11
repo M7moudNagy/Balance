@@ -6,35 +6,49 @@ use App\Models\Doctor;
 use App\Models\DoctorPatient;
 use App\Models\DoctorStatistic;
 use App\Models\Patient;
+use Illuminate\Http\Request;
 
 class DoctorPatientController extends Controller
 {
-    public function assignDoctorToPatient($doctor_id)
+    public function assignDoctorToPatient(Request $request,$doctor_id)
     {
-        $user = auth('patient')->user();
-        // $patient_id = $user->id;
-        $patient_id = 3;
-        
-    
-        $patient = Patient::find($patient_id);
-        if (!$patient) {
-            return response()->json(['message' => 'Patient not found or unauthorized'], 403);
-        }
-    
+        $request->validate([
+            'fullname' => 'required|string|max:255',
+            'email' => 'required|email',
+            'phoneNumber' => 'required|string',
+            'age' => 'required|numeric',
+            'typeOfAddiction' => 'required|string',
+            'durationOfAddication' => 'required|numeric',
+        ]);
+        $patient_id = auth('patient')->id();
+        $patient = Patient::findOrFail($patient_id); 
+
         $alreadyAssigned = $patient->doctors()->exists();
         if ($alreadyAssigned) {
             return response()->json(['message' => 'Patient is already assigned to a doctor.'], 409);
         }
     
-        $patient->doctors()->sync([$doctor_id]);
-    
+        $patient->doctors()->attach($doctor_id, [
+            'fullname' => $request->fullname,
+            'email' => $request->email,
+            'phoneNumber' => $request->phoneNumber,
+            'age' => $request->age,
+            'typeOfAddiction' => $request->typeOfAddiction,
+            'durationOfAddication' => $request->durationOfAddication,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
         $doctorStatistic = DoctorStatistic::find($doctor_id);
         if ($doctorStatistic) {
             $doctorStatistic->updatePatientCount();
         }
-    
-        return response()->json(['message' => 'Doctor assigned successfully']);
-    }
+
+        return response()->json([
+            'message' => 'Doctor assigned successfully',
+            'doctor_id' => $doctor_id,
+        ]);
+            }
     
 
     public function getPatientDetailsForAssignment()

@@ -33,8 +33,10 @@ class Doctor extends Authenticatable implements JWTSubject
     }
     public function patients()
     {
-        return $this->belongsToMany(Patient::class, 'doctor_patients');
-    }
+        return $this->belongsToMany(Patient::class, 'doctor_patients')
+                    ->withPivot('fullname', 'email', 'phoneNumber', 'age', 'typeOfAddiction','status','durationOfAddication')
+                    ->withTimestamps();
+    }    
 
     public function sendPasswordResetNotification($token)
     {
@@ -50,9 +52,9 @@ class Doctor extends Authenticatable implements JWTSubject
         return $this->morphMany(Massage::class, 'receiver');
     }
     public function statistics()
-{
-    return $this->hasOne(DoctorStatistic::class);
-}
+    {
+        return $this->hasOne(DoctorStatistic::class, 'doctor_id');
+    }
 
 
 

@@ -26,23 +26,22 @@ class AuthController extends Controller
         }
         $patient = Patient::where('email',$request->email)->first();
 
-        $has_doctor = DoctorPatient::where('user_id',$patient->id);
-        if($has_doctor){
-             
+        $has_doctor = DoctorPatient::where('user_id', $patient->id)->exists();
 
-        return response()->json([
-            'token' => $token,
-            'hasDoctor' => true,
-            'user' => new PatientResource(Auth::guard('patient')->user())
-        ]);
-         }else{
+            if ($has_doctor) {
+                return response()->json([
+                    'token' => $token,
+                    'hasDoctor' => true,
+                    'user' => new PatientResource(Auth::guard('patient')->user())
+                ]);
+            } else {
+                return response()->json([
+                    'token' => $token,
+                    'hasDoctor' => false,
+                    'user' => new PatientResource(Auth::guard('patient')->user())
+                ]);
+            }
 
-        return response()->json([
-            'token' => $token,
-            'hasDoctor' => false,
-            'user' => new PatientResource(Auth::guard('patient')->user())
-        ]);
-    }
 
     }
     public function registerPatient(Request $request)

@@ -15,7 +15,7 @@ class DoctorResource extends JsonResource
     public function toArray(Request $request): array
 {
     return [
-        // "ID" => $this->id,
+        "ID" => $this->id,
         "FullName" => $this->fullname,
         // "PhoneNumber" => $this->phone_number,
         // "Email" => $this->email,
@@ -29,7 +29,7 @@ class DoctorResource extends JsonResource
         "Image" => $this->image ? asset('storage/' . $this->image) : null,
 
         "Statistics" => [
-        "Number of Patients" => $this->statistics->patients_count ?? 0,  
+        "NumberofPatients" => $this->statistics->patients_count ?? 0,  
         // "Rating Sum" => $this->statistics->rating_total ?? 0,  
         "Average Rating" => $this->statistics && $this->statistics->rating_count > 0
         ? round($this->statistics->rating_total / $this->statistics->rating_count, 2) 

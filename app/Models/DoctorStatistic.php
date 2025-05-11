@@ -9,10 +9,14 @@ class DoctorStatistic extends Model
 {
     use HasFactory;
     protected $guarded = [];
+    protected $casts = [
+        'average_rating' => 'float',
+    ];
+    
 
     public function doctor()
     {
-        return $this->belongsTo(Doctor::class);
+        return $this->belongsTo(Doctor::class, 'doctor_id');
     }
 
     public function getAverageRatingAttribute()

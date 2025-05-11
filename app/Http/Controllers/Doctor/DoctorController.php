@@ -15,6 +15,7 @@ use App\Models\Task;
 use App\Models\Tip;
 use Illuminate\Http\Request;
 use App\Models\Doctor;
+use App\Models\DoctorStatistic;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use mysql_xdevapi\Collection;
@@ -136,21 +137,124 @@ class DoctorController extends Controller
         return new DoctorResource(['doctor not found.']);
 
     }
-    public function my_patients($id)
-{
-    $doctor = Doctor::findOrFail($id);
-    $patients = $doctor->patients;
 
-    // إزالة pivot
-    $patients->each(function ($patient) {
-        unset($patient->pivot);
-    });
+    public function my_patients()
+    {
+        $doctor = auth('doctor')->user();
 
-    return response()->json([
-        'doctor' => $doctor,
-    ]);
-}
+        $patients = $doctor->patients->map(function ($patient) {
+            return [
+                'fullname' => $patient->pivot->fullname,
+                'age' => $patient->pivot->age,
+                'addictionType' => $patient->pivot->typeOfAddiction,
+                'gender' => $patient->gander,
+                'status' => $patient->pivot->status,
 
+            ];
+        });
+
+        return response()->json([
+            'patients' => $patients
+        ]);
+    }
+ 
+    public function getPatientById($patient_id)
+    {
+        $doctor_id = auth('doctor')->id();
+        $doctor = Doctor::findOrFail($doctor_id);
+        $patient = $doctor->patients()->where('patients.id', $patient_id)->first();
+
+        if (!$patient) {
+            return response()->json(['message' => 'Patient not found or not assigned to this doctor'], 404);
+        }
+        $pendingTasks = PatientTask::with('task')
+            ->where('patient_id', $patient_id)
+            ->where('status', 'Pending')
+            ->get()
+            ->map(function ($pt) {
+                return [
+                    'task_id' => $pt->task_id,
+                    'title' => $pt->task->title ?? null,
+                    'description' => $pt->task->description ?? null,
+                    'status' => $pt->status,
+                ];
+            });
+
+        $inprogressTasks = PatientTask::with('task')
+            ->where('patient_id', $patient_id)
+            ->where('status', 'In Progress')
+            ->get()
+            ->map(function ($pt) {
+                return [
+                    'task_id' => $pt->task_id,
+                    'title' => $pt->task->title ?? null,
+                    'description' => $pt->task->description ?? null,
+                    'status' => $pt->status,
+                ];
+            });
+
+        $completedTasksData = PatientTask::with('task')
+            ->where('patient_id', $patient_id)
+            ->where('status', 'Completed')
+            ->get()
+            ->map(function ($pt) {
+                return [
+                    'task_id' => $pt->task_id,
+                    'title' => $pt->task->title ?? null,
+                    'description' => $pt->task->description ?? null,
+                    'status' => $pt->status,
+                    'completed_at' => $pt->completed_at,
+                ];
+            });
+
+        $overdueTasks = PatientTask::with('task')
+            ->where('patient_id', $patient_id)
+            ->where('status', 'Overdue')
+            ->get()
+            ->map(function ($pt) {
+                return [
+                    'task_id' => $pt->task_id,
+                    'title' => $pt->task->title ?? null,
+                    'description' => $pt->task->description ?? null,
+                    'status' => $pt->status,
+                ];
+            });
+
+        return response()->json([
+            'patient' => [
+                'fullname' => $patient->pivot->fullname,
+                'nickname' => $patient->nickname,
+                'age' => $patient->pivot->age,
+                'city' => $patient->city,
+                'gender' => $patient->gander,
+                'addictionType' => $patient->pivot->typeOfAddiction,
+                'durationOfAddication' => $patient->pivot->durationOfAddication,
+                'startDateOfTreatment' => $patient->pivot->created_at ? $patient->pivot->created_at->toDateTimeString() : null,
+                'status' => $patient->pivot->status,
+                'pendingTasks' => $pendingTasks,
+                'inprogressTasks' => $inprogressTasks,
+                'completedTasks' => $completedTasksData,
+                'overdueTasks' => $overdueTasks,
+            ]
+        ]);
+    }
+
+    public function updatePatientStatus(Request $request, $patient_id)
+    {
+        $doctor_id = auth('doctor')->id();
+        $doctor = Doctor::findOrFail($doctor_id);
+
+        $request->validate([
+            'status' => 'required|in:Under Treatment,Partial Recovery,Full Recovery'
+        ]);
+        
+        $doctor->patients()->updateExistingPivot($patient_id, [
+            'status' => $request->status,
+            'updated_at' => now(),
+        ]);
+
+        return response()->json(['message' => 'Status updated successfully.']);
+    }
 
     public function my_patients_tasks($id)
     {
@@ -165,19 +269,8 @@ class DoctorController extends Controller
         return new PatientTasksResource($patient);
     }
 
-    public function my_patients_tips($id){
-        $tips = PatientTip::where('patient_id',$id)->get();
-        $Patienttip = Tip::whereIn('id', $tips->pluck('tip_id'))->get();
-        $patient = Patient::where('id',$id)->get();
-        foreach ($patient as $p) {
-        if($Patienttip->isEmpty()){
-            return response()->json(["status"=>"200","massage"=>["Your Patient"." ".$p->first_name." ".$p->last_name." Tips is empty"]]);
-        }}
-        return response()->json(["Patient"=>$patient,"Tip"=>$Patienttip]);
-//        return new PatientTasksResource($tasks);
-    }
-
-    public function my_patients_forms($id){
+    public function my_patients_forms($id)
+    {
         $forms = PatientForm::where('patient_id',$id)->get();
         $Patientform = Form::whereIn('id', $forms->pluck('form_id'))->get();
         $patient = Patient::where('id',$id)->get();
@@ -241,14 +334,18 @@ class DoctorController extends Controller
     }
 
     public function top_rated_doctors()
-    {
-        $doctors = Doctor::where('rating', '>', 4.8)
-            ->orderByDesc('rating')
-            ->get();
+{
+    $doctors = Doctor::with('statistics')
+    ->whereHas('statistics', function ($query) {
+        $query->where('average_rating', '>', 4.8);
+    })
+    ->get()
+    ->sortByDesc(fn ($doctor) => $doctor->statistics->average_rating ?? 0)
+    ->values();
 
-        return TopRatedDoctorsResource::collection($doctors);
-    }
+return TopRatedDoctorsResource::collection($doctors);
+}
 
 
-
+    
 }
