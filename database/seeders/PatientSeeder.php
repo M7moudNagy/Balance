@@ -24,7 +24,6 @@ class PatientSeeder extends Seeder
                 "gander"=> "Male",
                 "city"=> "القاهره",
                 "email"=> "ahmed001@example.com",
-                "avatar"=> 0,
             ],
             [
                 "fullname"=> "Mohamed Tarek",
@@ -35,7 +34,6 @@ class PatientSeeder extends Seeder
                 "gander"=> "Male",
                 "city"=> "الجيزة",
                 "email"=> "mohamed002@example.com",
-                "avatar"=> 0,
             ],
             [
                 "fullname"=> "Ali Hassan",
@@ -46,7 +44,6 @@ class PatientSeeder extends Seeder
                 "gander"=> "Male",
                 "city"=> "القليوبية",
                 "email"=> "ali003@example.com",
-                "avatar"=> 0,
             ],
             [
                 "fullname"=> "Sara Adel",
@@ -57,7 +54,6 @@ class PatientSeeder extends Seeder
                 "gander"=> "Female",
                 "city"=> "المنصورة",
                 "email"=> "sara004@example.com",
-                "avatar"=> 0,
             ],
             [
                 "fullname"=> "Laila Ahmed",
@@ -68,7 +64,6 @@ class PatientSeeder extends Seeder
                 "gander"=> "Female",
                 "city"=> "الاسكندرية",
                 "email"=> "laila005@example.com",
-                "avatar"=> 0,
             ],
             [
                 "fullname"=> "Hossam Gamal",
@@ -79,7 +74,6 @@ class PatientSeeder extends Seeder
                 "gander"=> "Male",
                 "city"=> "أسيوط",
                 "email"=> "hossam006@example.com",
-                "avatar"=> 0,
             ],
             [
                 "fullname"=> "Nour Hassan",
@@ -90,7 +84,6 @@ class PatientSeeder extends Seeder
                 "gander"=> "Female",
                 "city"=> "القاهرة",
                 "email"=> "nour007@example.com",
-                "avatar"=> 0,
             ],
             [
                 "fullname"=> "Karim Said",
@@ -101,7 +94,6 @@ class PatientSeeder extends Seeder
                 "gander"=> "Male",
                 "city"=> "بني سويف",
                 "email"=> "karim008@example.com",
-                "avatar"=> 0,
             ],
             [
                 "fullname"=> "Salma Yasser",
@@ -112,7 +104,6 @@ class PatientSeeder extends Seeder
                 "gander"=> "Female",
                 "city"=> "السويس",
                 "email"=> "salma009@example.com",
-                "avatar"=> 0,
             ],
             [
                 "fullname"=> "Tamer Fathy",
@@ -123,7 +114,6 @@ class PatientSeeder extends Seeder
                 "gander"=> "Male",
                 "city"=> "الشرقية",
                 "email"=> "tamer010@example.com",
-                "avatar"=> 0,
             ],
         ]);
         

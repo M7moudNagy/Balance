@@ -21,7 +21,7 @@ return new class extends Migration
             $table->integer('age');
             $table->string('typeOfAddiction');
             $table->enum('status',['Under Treatment','Partial Recovery','Full Recovery'])->default('Under Treatment');
-            $table->integer('durationOfAddication');
+            $table->string('durationOfAddication');
 
 
             $table->timestamps();

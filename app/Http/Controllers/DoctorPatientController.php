@@ -18,7 +18,7 @@ class DoctorPatientController extends Controller
             'phoneNumber' => 'required|string',
             'age' => 'required|numeric',
             'typeOfAddiction' => 'required|string',
-            'durationOfAddication' => 'required|numeric',
+            'durationOfAddication' => 'required|string|max:7',
         ]);
         $patient_id = auth('patient')->id();
         $patient = Patient::findOrFail($patient_id); 

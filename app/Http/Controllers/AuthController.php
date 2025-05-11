@@ -58,7 +58,7 @@ class AuthController extends Controller
             'avatar' => 'nullable|integer',
         ]);
 
-        $avatarName = $request->avatar ? $request->avatar . '.png' : null;
+        $avatarName = $request->avatar ? $request->avatar . '.png' : '0.png';
 
         if (!Storage::exists('public/avatars/' . $avatarName)) {
             
