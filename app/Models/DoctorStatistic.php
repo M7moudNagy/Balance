@@ -23,11 +23,19 @@ class DoctorStatistic extends Model
     {
         return $this->rating_count > 0 ? round($this->rating_sum / $this->rating_count, 1) : 0;
     }
-    public function updatePatientCount()
-    {
-        $this->patients_count = $this->doctor->patients()->count(); 
-        $this->save();
-    }
+    public function updateDoctorPatientCount()
+{
+    // جيب الدكتور المرتبط بالإحصائيات
+    $doctor = Doctor::find($this->doctor_id);
+
+    // احسب عدد المرضى المرتبطين بالدكتور
+    $patientsCount = $doctor->patients()->count();
+
+    // حدث القيمة وخزنها
+    $this->patients_count = $patientsCount;
+    $this->save();
+}
+
     
 }
 

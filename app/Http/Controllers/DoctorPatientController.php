@@ -39,7 +39,7 @@ class DoctorPatientController extends Controller
             'updated_at' => now()
         ]);
 
-        $doctorStatistic = DoctorStatistic::find($doctor_id);
+        $doctorStatistic = DoctorStatistic::where('doctor_id', $doctor_id)->first();
         if ($doctorStatistic) {
             $doctorStatistic->updateDoctorPatientCount();
         }
