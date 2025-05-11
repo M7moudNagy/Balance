@@ -20,7 +20,7 @@ return new class extends Migration
             $table->enum('gander', ['Male', 'Female'])->default('male');
             $table->string('city');
             $table->string('email')->unique();
-            $table->integer('avatar')->default('0');
+            $table->string('avatar')->default('0.png');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
