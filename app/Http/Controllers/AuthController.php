@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Doctor;
 use App\Models\Patient;
 use Illuminate\Http\Request;
+use App\Models\DoctorPatient;
 use App\Models\DoctorStatistic;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\PatientResource;
-use App\Models\DoctorPatient;
 use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
@@ -26,7 +27,7 @@ class AuthController extends Controller
         }
         $patient = Patient::where('email',$request->email)->first();
 
-        $has_doctor = DoctorPatient::where('user_id', $patient->id)->exists();
+        $has_doctor = DoctorPatient::where('patient_id', $patient->id)->exists();
 
             if ($has_doctor) {
                 return response()->json([
@@ -41,7 +42,6 @@ class AuthController extends Controller
                     'user' => new PatientResource(Auth::guard('patient')->user())
                 ]);
             }
-
 
     }
     public function registerPatient(Request $request)
@@ -153,7 +153,7 @@ class AuthController extends Controller
 
     public function logout()
     {
-        Auth::logout();
+        JWTAuth::invalidate(JWTAuth::getToken());
         return response()->json(['message' => 'Successfully logged out']);
     }
 
