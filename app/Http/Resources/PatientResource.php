@@ -3,8 +3,9 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 class PatientResource extends JsonResource
 {
@@ -24,8 +25,8 @@ class PatientResource extends JsonResource
             'Age' => $this->age,
             'City' => $this->city,
             'Gander' => $this->gander,
-            'Avatar' => $this->avatar,
-//        "Email Verified At"=> $this->email_verified_at,
+            'Avatar' => Storage::url('avatars/' . $this->avatar), // توليد رابط الصورة
+            //        "Email Verified At"=> $this->email_verified_at,
 //        "Password"=> $this->password,
 //        "Doctor ID"=> $this->doctor_id,
 //        "Remember_token"=> $this->remember_token

@@ -41,7 +41,7 @@ class DoctorPatientController extends Controller
 
         $doctorStatistic = DoctorStatistic::find($doctor_id);
         if ($doctorStatistic) {
-            $doctorStatistic->updatePatientCount();
+            $doctorStatistic->updateDoctorPatientCount();
         }
 
         return response()->json([

@@ -31,7 +31,7 @@ class DoctorResource extends JsonResource
         "Statistics" => [
         "NumberofPatients" => $this->statistics->patients_count ?? 0,  
         // "Rating Sum" => $this->statistics->rating_total ?? 0,  
-        "Average Rating" => $this->statistics && $this->statistics->rating_count > 0
+        "AverageRating" => $this->statistics && $this->statistics->rating_count > 0
         ? round($this->statistics->rating_total / $this->statistics->rating_count, 2) 
         : 0,
         "Views" => $this->statistics->views ?? 0,
