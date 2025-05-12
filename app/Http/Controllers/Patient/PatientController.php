@@ -27,7 +27,7 @@ class PatientController extends Controller
     {
         $patient = Patient::findOrFail($id);
 
-        $request->validate([
+        $data = $request->validate([
             'fullname' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|email|unique:patients,email,' . $id,
             'phoneNumber' => 'sometimes|required|string|unique:patients,phoneNumber,' . $id,
