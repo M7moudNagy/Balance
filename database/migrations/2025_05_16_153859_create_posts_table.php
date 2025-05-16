@@ -11,14 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tasks', function (Blueprint $table) {
+        Schema::create('posts', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->unsignedBigInteger('doctor_id'); // العلاقة بالدكتور
-            $table->integer('task_points')->default(0);
-            $table ->date('target_date')->nullable();
+            $table->text('content');
+            $table->string('image')->nullable();
+            $table->unsignedBigInteger('user_id');
+            $table->string('user_type'); // App\Models\Doctor أو App\Models\Patient
             $table->timestamps();
         });
+        
     }
 
     /**
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tasks');
+        Schema::dropIfExists('posts');
     }
 };

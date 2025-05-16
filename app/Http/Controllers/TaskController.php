@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\http\Helpers\ResponseHelper;
-use App\Http\Resources\DoctorResource;
-use App\Http\Resources\PatientResource;
-use App\Http\Resources\TaskResources;
-use App\Http\Resources\TipResource;
+use App\Models\Task;
 use App\Models\Patient;
 use App\Models\PatientTask;
-use App\Models\Task;
-use App\Models\Tip;
 use Illuminate\Http\Request;
+use App\Models\DoctorPatient;
 use Illuminate\Support\Facades\DB;
+use App\http\Helpers\ResponseHelper;
+use App\Http\Resources\TaskResource;
+use App\Http\Resources\DoctorResource;
+use App\Http\Resources\PatientResource;
 
 class TaskController extends Controller
 {
@@ -22,180 +21,113 @@ class TaskController extends Controller
     public function index()
     {
         $tasks = Task::all();
-        return response()->json($tasks);
+        return response()->json(['tasks' => $tasks]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $request->validate([
-        'title' => 'required|string',
-        'description' => 'nullable|string',
-        'assign_date' => 'required|date',
-        'target_date' => 'required|date',
-        'repeat' => 'nullable|string',
-        'days' => 'nullable|array',
-        'notes' => 'nullable|string',
-        'patients' => 'required|array', // استقبال المرضى كـ Array
-        'patients.*' => 'exists:patients,id',// كل مريض لازم يكون موجود
-        'category_id' => 'required|exists:categories,id', // 🔹 التحقق من وجود الفئة في قاعدة البيانات
+        if ($request->has('patient_ids')) {
+            $validPatients = DoctorPatient::whereIn('patient_id', $request->patient_ids)
+                ->where('doctor_id', $request->doctor_id)
+                ->pluck('id')
+                ->toArray();
 
-        ]);
-        $task = Task::create([
-            'title' => $request->title,
-            'description' => $request->description,
-            'assign_date' => $request->assign_date,
-            'target_date' => $request->target_date,
-            'repeat' => $request->repeat,
-            'days' => json_encode($request->days), // تحويل Array إلى JSON
-            'notes' => $request->notes,
-            'doctor_id' => $request->doctor_id, // تعيين الدكتور الحالي
-            'category_id' => $request->category_id, // 🔹 ربط المهمة بالفئة
+                $task = Task::create([
+                    'name' => $request->name,
+                    'doctor_id' => $request->doctor_id,
+                    'task_points' => $request->task_points,
+                    'target_date' => $request->target_date
+                ]);
 
-        ]);
-
-        // تحضير البيانات مع status
-        $patientsWithStatus = [];
-        foreach ($request->patients as $patientId) {
-            $patientsWithStatus[$patientId] = ['status' => 'pending'];
+                foreach ($request->questions as $q) {
+                    $question = $task->questions()->create([
+                        'question_text' => $q['question_text'],
+                        'type' => $q['type'],
+                        'time_seconds' => $q['type'] === 'timer' ? $q['time_seconds'] : null
+                    ]);
+            
+                    if ($q['type'] === 'multiple_choice' && isset($q['options'])) {
+                        foreach ($q['options'] as $optionText) {
+                            $question->options()->create(['text' => $optionText]);
+                        }
+                    }
+                }
+                $task->patients()->attach($validPatients);
         }
-        $task->patients()->attach($patientsWithStatus);
-//        foreach ($request->patients as $patientId) {
-//            \App\Models\PatientTask::create([
-//                'task_id' => $task->id,
-//                'patient_id' => $patientId,
-//                'status' => 'pending',
-//            ]);
-//        }
-        return response()->json(['message' => 'Task created successfully', 'task' => $task]);
+        return response()->json(['message' => 'Task created successfully']);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
-        $task = Task::with([
-            'category',
-            'patients' => function($q) {
-                $q->withPivot('status');
-            }
-        ])->find($id);
+        $task = Task::with(['questions.options', 'patients'])->findOrFail($id);
+        return new TaskResource($task);
+
+    }
+
+    public function update(Request $request, $id)
+    {
+        $task = Task::find($id);
 
         if (!$task) {
             return response()->json(['message' => 'Task not found'], 404);
         }
 
-        return new TaskResources($task);
-    }
-
-
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Task $task)
-    {
-
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Task $task)
-    {
-        $request->validate([
-            'title' => 'required|max:255',
-            'description' => 'required|max:255',
-            'assign_date' => 'required|date',
-            'target_date' => 'required|date',
-            'repeat' => 'required|numeric',
-            'days' => 'required|array',
-            'notes' => 'nullable|min:50',
-            'patients' => 'nullable|array', // لو عايز تحدّث المرضى كمان
-            'patients.*.id' => 'required|exists:patients,id',
-            'patients.*.status' => 'required|in:pending,in_progress,completed,over_due',
-        ]);
-
-        // تحديث بيانات المهمة نفسها
         $task->update([
-            'title' => $request->title,
-            'description' => $request->description,
-            'assign_date' => $request->assign_date,
-            'target_date' => $request->target_date,
-            'repeat' => $request->repeat,
-            'days' => json_encode($request->days),
-            'notes' => $request->notes,
+            'name' => $request->name ?? $task->name,
+            'task_points' => $request->task_points ?? $task->task_points,
+            'target_date' => $request->target_date ?? $task->target_date,
         ]);
 
-        // لو تم إرسال بيانات المرضى للتعديل
-        if ($request->has('patients')) {
-            $patientsData = [];
-            foreach ($request->patients as $patient) {
-                $patientsData[$patient['id']] = ['status' => $patient['status']];
-            }
-            // مزامنة المرضى الحاليين بالمهمة وتحديث حالاتهم
-            $task->patients()->sync($patientsData);
+        if ($request->has('patient_ids')) {
+            $validPatients = DoctorPatient::whereIn('patient_id', $request->patient_ids)
+                ->where('doctor_id', $task->doctor_id)
+                ->pluck('patient_id')
+                ->toArray();
+
+            $task->patients()->sync($validPatients); // تحديث المرفقين بدل تكرارهم
         }
-        return response()->json(['message' => 'Task updated successfully', 'task' => $task]);
+
+        return response()->json(['message' => 'Task updated successfully']);
     }
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Task $task,$id)
+
+    public function destroy($id)
     {
-        $task = Task::where('id',$id);
+        $task = Task::find($id);
+
+        if (!$task) {
+            return response()->json(['message' => 'Task not found'], 404);
+        }
+
+        // حذف العلاقات قبل حذف التاسك نفسه
+        $task->patients()->detach(); 
+        foreach ($task->questions as $question) {
+            $question->options()->delete(); 
+            $question->delete();
+        }
+
         $task->delete();
-        return response()->json(['task deleted successfully']);
+
+        return response()->json(['message' => 'Task deleted successfully']);
     }
 
-    public function updateTaskStatus(Request $request, $taskId, $patientId)
-{
-    $request->validate([
-        'status' => 'required|in:pending,in_progress,completed,over_due'
-    ]);
+    public function markTaskInProgress($task_id)
+    {
+        $patient_id = auth('patient')->id();
 
-    $task = Task::findOrFail($taskId);
+        $patientTask = PatientTask::where('patient_id', $patient_id)
+            ->where('task_id', $task_id)
+            ->first();
 
-    // تأكد إن المريض مرتبط بالمهمة
-    if (!$task->patients()->where('patient_id', $patientId)->exists()) {
-        return response()->json(['message' => 'Patient not assigned to this task'], 404);
+        if (!$patientTask) {
+            return response()->json(['error' => 'Task not found for this patient'], 404);
+        }
+
+        $patientTask->status = 'In Progress';
+        $patientTask->save();
+
+        return response()->json(['message' => 'Task status updated to In Progress']);
     }
 
-    $currentStatus = $task->patients()->where('patient_id', $patientId)->first()->pivot->status;
-    $newStatus = $request->status;
 
-    // منطق الحماية:
-    if ($newStatus === 'in_progress' && $currentStatus !== 'pending') {
-        return response()->json(['message' => 'Task can only move to in_progress from pending'], 400);
-    }
-
-    if ($newStatus === 'completed' && $currentStatus === 'completed') {
-        return response()->json(['message' => 'Task already completed'], 400);
-    }
-
-    // منطق تحديث completed_at عند تغيير الحالة إلى "completed"
-    if ($newStatus === 'completed' && $currentStatus !== 'completed') {
-        $task->patients()->updateExistingPivot($patientId, [
-            'status' => $newStatus,
-            'completed_at' => now()  // تعيين التاريخ والوقت الحالي
-        ]);
-    } else {
-        // تحديث الحالة فقط إذا لم تكن "completed"
-        $task->patients()->updateExistingPivot($patientId, ['status' => $newStatus]);
-    }
-
-    return response()->json(['message' => "Task marked as {$newStatus} for patient"]);
-}
 
 }

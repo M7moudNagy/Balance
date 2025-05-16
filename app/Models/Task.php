@@ -18,9 +18,10 @@ class Task extends Model
             ->withPivot('status')
             ->withTimestamps();
     }
-    public function category(){
-        return $this->belongsTo(Category::class);
+    public function questions() {
+        return $this->hasMany(Question::class);
     }
+    
     public function doctor()
     {
         return $this->belongsTo(Doctor::class);

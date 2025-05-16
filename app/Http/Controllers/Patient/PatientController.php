@@ -123,9 +123,9 @@ class PatientController extends Controller
             ->map(function ($pt) {
                 return [
                     'task_id' => $pt->task_id,
-                    'title' => $pt->task->title ?? null,
-                    'description' => $pt->task->description ?? null,
-                    'status' => $pt->status,
+                    'name' => $pt->task->name ?? null,
+                    'task_points' => $pt->task->task_points ?? null,
+                    'target_date' => $pt->target_date,
                 ];
             });
 
@@ -136,9 +136,9 @@ class PatientController extends Controller
             ->map(function ($pt) {
                 return [
                     'task_id' => $pt->task_id,
-                    'title' => $pt->task->title ?? null,
-                    'description' => $pt->task->description ?? null,
-                    'status' => $pt->status,
+                    'name' => $pt->task->name ?? null,
+                    'task_points' => $pt->task->task_points ?? null,
+                    'target_date' => $pt->target_date,
                 ];
             });
 
@@ -149,9 +149,9 @@ class PatientController extends Controller
             ->map(function ($pt) {
                 return [
                     'task_id' => $pt->task_id,
-                    'title' => $pt->task->title ?? null,
-                    'description' => $pt->task->description ?? null,
-                    'status' => $pt->status,
+                    'name' => $pt->task->name ?? null,
+                    'task_points' => $pt->task->task_points ?? null,
+                    'target_date' => $pt->target_date,
                     'completed_at' => $pt->completed_at,
                 ];
             });
@@ -163,9 +163,9 @@ class PatientController extends Controller
             ->map(function ($pt) {
                 return [
                     'task_id' => $pt->task_id,
-                    'title' => $pt->task->title ?? null,
-                    'description' => $pt->task->description ?? null,
-                    'status' => $pt->status,
+                    'name' => $pt->task->name ?? null,
+                    'task_points' => $pt->task->task_points ?? null,
+                    'target_date' => $pt->target_date,
                 ];
             });
 

@@ -41,6 +41,8 @@ class Patient extends Authenticatable implements JWTSubject
     {
         return $this->morphMany(Massage::class, 'receiver');
     }
-
-
+    public function posts()
+    {
+        return $this->morphMany(Post::class, 'user');
+    }
 }

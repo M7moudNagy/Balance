@@ -20,7 +20,7 @@ class MassageController extends Controller
 
         $message = Massage::create($data);
 
-        broadcast(new MessageSent($message))->toOthers(); // البث هنا
+        broadcast(new MessageSent($message))->toOthers();
 
         return response()->json(['message' => 'Message sent', 'data' => $message]);
     }

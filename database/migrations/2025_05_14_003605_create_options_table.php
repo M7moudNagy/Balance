@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tasks', function (Blueprint $table) {
+        // database/migrations/xxxx_xx_xx_create_options_table.php
+        Schema::create('options', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->unsignedBigInteger('doctor_id'); // العلاقة بالدكتور
-            $table->integer('task_points')->default(0);
-            $table ->date('target_date')->nullable();
+            $table->unsignedBigInteger('question_id');
+            $table->string('text');
             $table->timestamps();
         });
+
     }
 
     /**
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tasks');
+        Schema::dropIfExists('options');
     }
 };

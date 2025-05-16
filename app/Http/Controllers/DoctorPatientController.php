@@ -21,8 +21,12 @@ class DoctorPatientController extends Controller
             'durationOfAddication' => 'required|string|max:7',
         ]);
         $patient_id = auth('patient')->id();
-        $patient = Patient::findOrFail($patient_id); 
-
+        try {
+            $patient = Patient::findOrFail($patient_id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Patient not found'], 404);
+        }
+        
         $alreadyAssigned = $patient->doctors()->exists();
         if ($alreadyAssigned) {
             return response()->json(['message' => 'Patient is already assigned to a doctor.'], 409);
@@ -42,15 +46,19 @@ class DoctorPatientController extends Controller
         $doctorStatistic = DoctorStatistic::where('doctor_id', $doctor_id)->first();
         if ($doctorStatistic) {
             $doctorStatistic->updateDoctorPatientCount();
+            $doctorStatistic = $doctorStatistic->fresh(); 
         }
 
         return response()->json([
             'message' => 'Doctor assigned successfully',
             'doctor_id' => $doctor_id,
+            // 'rating_total' => $doctorStatistic->rating_total,
+            // 'views' => $doctorStatistic->views,
+            // 'patients_count' => $doctorStatistic->patients_count,
+            // 'average_rating' => $doctorStatistic->average_rating,
         ]);
-            }
+    }
     
-
     public function getPatientDetailsForAssignment()
     {
         $user = auth('patient')->user();
@@ -60,7 +68,7 @@ class DoctorPatientController extends Controller
         if (!$check_assign) {
         return response()->json(['message' => 'Doctor Does not assigned to this patient.'], 409);
         }
-        $patient = Patient::where('id', 1)->first();
+        $patient = Patient::where('id', $user->id)->first();
 
         if (!$patient) {
             return response()->json(['message' => 'Patient not found'], 404);
@@ -73,13 +81,10 @@ class DoctorPatientController extends Controller
             'age'           => $patient->age,
         ]);
     }
-
     public function unassignDoctorFromPatient($doctor_id)
     {
         $user = auth('patient')->user();
         $patient_id = $user->id;
-        // $patient_id = 3;
-
 
         $patient = Patient::find($patient_id);
         if (!$patient) {
@@ -103,6 +108,4 @@ class DoctorPatientController extends Controller
 
         return response()->json(['message' => 'Doctor unassigned successfully']);
     }
-
-
 }

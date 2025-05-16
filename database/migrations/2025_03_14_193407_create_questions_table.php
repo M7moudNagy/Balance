@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('questions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('form_id')->constrained()->onDelete('cascade');
-            $table->string('type'); // مثل 'radio', 'yes_no', 'scale'
-            $table->text('question');
-            $table->json('options')->nullable();
+            $table->unsignedBigInteger('task_id');
+            $table->text('question_text');
+            $table->enum('type', ['multiple_choice', 'yes_no', 'timer']);
+            $table->integer('time_seconds')->nullable(); 
             $table->timestamps();
         });
+
     }
 
     /**

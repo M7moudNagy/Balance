@@ -9,21 +9,27 @@ class Response extends Model
 {
     use HasFactory;
 
-    protected $table = 'responses'; // تأكيد اسم الجدول
-    protected $fillable = ['form_id', 'question_id', 'patient_id', 'answer', 'description'];
+    protected $table = 'responses';
+    protected $fillable = [
+        'patient_id',
+        'task_id',
+        'question_id',
+        'answer_text',
+        'time_taken',
+    ];
 
     public function question()
     {
-        return $this->belongsTo(Question::class, 'question_id');
-    }
-
-    public function form()
-    {
-        return $this->belongsTo(Form::class, 'form_id');
+        return $this->belongsTo(Question::class);
     }
 
     public function patient()
     {
-        return $this->belongsTo(Patient::class, 'patient_id');
+        return $this->belongsTo(Patient::class);
+    }
+
+    public function task()
+    {
+        return $this->belongsTo(Task::class);
     }
 }

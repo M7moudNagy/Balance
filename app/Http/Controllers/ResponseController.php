@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Task;
+use App\Models\Patient;
+use App\Models\PatientTask;
 use App\Models\Question;
 use App\Models\Response;
 use Illuminate\Http\Request;
@@ -13,68 +16,46 @@ class ResponseController extends Controller
         return response()->json(Response::all());
     }
 
-    // Store a new response
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'form_id' => 'required|exists:forms,id',
-            'responses' => 'required|array',
-            'responses.*.question_id' => 'required|exists:questions,id',
-            'responses.*.patient_id' => 'required|exists:patients,id',
-            'responses.*.answer' => [
-                'required',
-                'string',
-                function ($attribute, $value, $fail) use ($request) {
-                    // استخراج question_id من index داخل responses
-                    preg_match('/responses\.(\d+)\.answer/', $attribute, $matches);
-                    $index = $matches[1] ?? null;
-                    if ($index !== null) {
-                        $questionId = $request->responses[$index]['question_id'] ?? null;
-                        $question = Question::find($questionId);
-                        if ($question && !empty($question->options) && !in_array($value, $question->options)) {
-                            $fail("The selected answer is invalid for question ID: $questionId. Allowed options: " . implode(', ', $question->options));
-                        }
-                    }
-                }
-            ],
-            'responses.*.description' => 'nullable|string',
-        ]);
+        
+        foreach ($request->answers as $ans) {
+            $question = Question::where('id', $ans['question_id'])
+                ->where('task_id', $request->task_id)
+                ->first();
 
-        $responses = [];
-
-        foreach ($validated['responses'] as $responseData) {
-            // التحقق إن المريض جاوب مرة واحدة فقط لكل سؤال
-            $existingResponse = Response::where('question_id', $responseData['question_id'])
-                ->where('patient_id', $responseData['patient_id'])
-                ->exists();
-
-            if ($existingResponse) {
+            if (!$question) {
                 return response()->json([
-                    'message' => 'You have already answered some of these questions.',
-                    'errors' => ['answer' => ['One or more questions have already been answered.']]
+                    'error' => "Invalid question-task mapping"
                 ], 422);
             }
 
-            // إنشاء الاستجابة لكل سؤال
-            $responses[] = Response::create([
-                'form_id' => $validated['form_id'], // 🔥 إضافة `form_id`
-                'question_id' => $responseData['question_id'],
-                'patient_id' => $responseData['patient_id'],
-                'answer' => $responseData['answer'],
-                'description' => $responseData['description'] ?? null,
+            Response::create([
+                'patient_id' => $request->patient_id,
+                'task_id' => $request->task_id,
+                'question_id' => $ans['question_id'],
+                'answer_text' => $ans['answer_text'],
+                'time_taken' => $ans['time_taken'] ?? null,
             ]);
         }
+        $task = Task::find($request->task_id);
 
-        return response()->json([
-            'message' => 'Responses saved successfully!',
-//            'responses' => $responses
-        ], 201);
+        if ($task->task_points > 0) {
+            $patient = Patient::find($request->patient_id);
+
+            if ($patient) {
+                $patient->points += $task->task_points;
+                $patient->save();
+            }
+        }
+        $updateStatus = PatientTask::where('patient_id',$request->patient_id)->first();
+        $updateStatus->status = "Completed";
+        $updateStatus->completed_at =now();
+        $updateStatus->save();
+
+        return response()->json(['message' => 'Answers saved successfully']);
     }
-
-
-
-
-
+    
     public function show(Response $response)
     {
         return response()->json($response);

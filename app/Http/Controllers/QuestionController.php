@@ -7,13 +7,11 @@ use Illuminate\Http\Request;
 
 class QuestionController extends Controller
 {
-    // Get all questions
     public function index()
     {
         return response()->json(Question::all());
     }
 
-    // Create a new question
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -27,13 +25,11 @@ class QuestionController extends Controller
         return response()->json($question, 201);
     }
 
-    // Get a single question
     public function show(Question $question)
     {
         return response()->json($question);
     }
 
-    // Update a question
     public function update(Request $request, Question $question)
     {
         $validated = $request->validate([
@@ -46,7 +42,6 @@ class QuestionController extends Controller
         return response()->json($question);
     }
 
-    // Delete a question
     public function destroy(Question $question)
     {
         $question->delete();

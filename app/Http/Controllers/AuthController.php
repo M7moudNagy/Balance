@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Task;
 use App\Models\Doctor;
 use App\Models\Patient;
+use App\Models\PatientTask;
 use Illuminate\Http\Request;
 use App\Models\DoctorPatient;
 use App\Models\DoctorStatistic;
@@ -15,6 +17,25 @@ use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
+    public function overdueTasks()
+    {
+        $patient_id = auth('patient')->id();
+
+        $patient_tasks = PatientTask::where('patient_id', $patient_id)
+            ->where('status', '!=', 'Completed')
+            ->get();
+
+        foreach ($patient_tasks as $patient_task) {
+            $task = Task::find($patient_task->task_id);
+
+            if ($task && $task->target_date < now()) {
+                $patient_task->status = 'Overdue';
+                $patient_task->save();
+            }
+        }
+
+        return response()->json(['message' => 'Overdue tasks updated successfully']);
+    }
     public function loginPatient(Request $request)
     {
         $credentials = $request->validate([
@@ -30,6 +51,7 @@ class AuthController extends Controller
         $has_doctor = DoctorPatient::where('patient_id', $patient->id)->exists();
 
             if ($has_doctor) {
+                $this->overduetasks();
                 return response()->json([
                     'token' => $token,
                     'hasDoctor' => true,
@@ -82,17 +104,12 @@ class AuthController extends Controller
 
 
         // تسجيل دخول تلقائي بعد التسجيل
-//        $token = Auth::guard('patient')->login($patient);
 
         return response()->json([
             'message' => 'Patient registered successfully',
 
-//            'user' => $patient,
-//            'avatar_url' => $request->avatar ? asset('storage/' . $request->avatar) : null,
-//            'token' => $token,
         ]);
     }
-
     public function loginDoctor(Request $request)
     {
         $credentials = $request->validate([
@@ -106,7 +123,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user' => Auth::guard('doctor')->user(),
+            'doctor' => Auth::guard('doctor')->user(),
         ]);
     }
     public function registerDoctor(Request $request)
@@ -146,11 +163,8 @@ class AuthController extends Controller
         }
         return response()->json([
             'message' => 'Doctor registered successfully',
-            'doctor_id' => $doctor->id
         ]);
     }
-    
-
     public function logout()
     {
         JWTAuth::invalidate(JWTAuth::getToken());
