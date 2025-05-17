@@ -11,7 +11,7 @@ trait HasUserImage
         }
 
         if ($user instanceof \App\Models\Patient) {
-            return $user->avatar ? asset('storage/' . $user->avatar) : null;
+            return $user->avatar ? asset('storage/avatars/' . $user->avatar) : null;
         }
 
         return null;

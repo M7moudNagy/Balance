@@ -14,14 +14,17 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\MassageController;
-
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\ResponseController;
+
+use App\Http\Controllers\ChallengeController;
+use App\Http\Controllers\ChallengeLikeController;
 use App\Http\Controllers\Doctor\DoctorController;
 use App\Http\Controllers\DoctorPatientController;
 use App\Http\Controllers\ForgetPasswordController;
 use App\Http\Controllers\DoctorStatisticController;
 use App\Http\Controllers\Patient\PatientController;
+use App\Http\Controllers\ChallengeCommentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -94,7 +97,6 @@ Route::middleware('auth:doctor')->group(function () {
     Route::resource('/task', TaskController::class);
     Route::resource('/question', QuestionController::class);
     Route::resource('/response', ResponseController::class);
-    Route::resource('/doctor', DoctorController::class);
 });
 
 /*
@@ -109,12 +111,19 @@ Route::middleware('auth:doctor')->get('/tasks/{task_id}', [TaskController::class
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:doctor,patient')->group(function () {
+    Route::resource('/doctor', DoctorController::class);
     Route::get('/posts', [PostController::class, 'index']);
     Route::get('/posts/{id}', [PostController::class, 'show']);
     Route::post('/posts', [PostController::class, 'store']);
     Route::delete('/posts/{id}', [PostController::class, 'destroy']);
     Route::post('/posts/{id}/like', [LikeController::class, 'toggle']);
     Route::post('/posts/{id}/comment', [CommentController::class, 'store']);
+    Route::get('/challenges', [ChallengeController::class, 'index']);
+    Route::get('/challenges/{id}', [ChallengeController::class, 'show']);
+    Route::post('/challenges', [ChallengeController::class, 'store']);
+    Route::delete('/challenges/{id}', [ChallengeController::class, 'destroy']);
+    Route::post('/challenges/{id}/like', [ChallengeLikeController::class, 'toggle']);
+    Route::post('/challenges/{id}/comment', [ChallengeCommentController::class, 'store']);
 });
 
 /*

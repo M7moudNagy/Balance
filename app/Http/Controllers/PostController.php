@@ -20,7 +20,7 @@ class PostController extends Controller
     {
         $request->validate([
             'content' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg',
         ]);
 
         $user = auth()->user();
@@ -38,7 +38,7 @@ class PostController extends Controller
         $post = Post::create($data);
 
         return response()->json([
-            'message' => 'Post created successfully',
+            'message' => 'Challenge created successfully',
         ]);
     }
 
@@ -51,7 +51,17 @@ class PostController extends Controller
     public function destroy($id)
     {
         $post = Post::findOrFail($id);
+
+        if (
+            $post->user_id !== auth()->id() ||
+            $post->user_type !== get_class(auth()->user())
+        ) {
+            return response()->json(['message' => 'غير مسموح لك بحذف هذا البوست'], 403);
+        }
+
         $post->delete();
-        return response()->json(['message' => 'Post deleted']);
+
+        return response()->json(['message' => 'تم حذف البوست بنجاح']);
     }
+
 }

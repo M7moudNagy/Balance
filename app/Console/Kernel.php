@@ -13,8 +13,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
-        $schedule->command('tasks:update-overdue')->daily(); // كل يوم
+        $schedule->call(function () {
+            \App\Models\Challenge::where('created_at', '<', now()->subWeek())->delete();
+        })->daily();
+
         $schedule->call(function () {
             Massage::where('created_at', '<', now()->subDays(30))->delete();
         })->daily();
