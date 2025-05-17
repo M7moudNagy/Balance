@@ -24,4 +24,9 @@ class Post extends Model
     {
         return $this->hasMany(PostComment::class);
     }
+    public function likedByCurrentUser()
+    {
+        return $this->hasOne(PostLike::class)->where('user_id', auth()->id());
+    }
+
 }
