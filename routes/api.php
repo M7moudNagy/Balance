@@ -82,6 +82,7 @@ Route::middleware('auth:doctor')->prefix('doctor')->group(function () {
 | Routes for Both Authenticated (Patient or Doctor)
 |--------------------------------------------------------------------------
 */
+
 Route::middleware('auth:patient,doctor')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
@@ -111,6 +112,7 @@ Route::middleware('auth:doctor')->get('/tasks/{task_id}', [TaskController::class
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:doctor,patient')->group(function () {
+    Route::get('/top-rated-doctors', [DoctorController::class, 'top_rated_doctors']);
     Route::resource('/doctor', DoctorController::class);
     Route::get('/posts', [PostController::class, 'index']);
     Route::get('/posts/{id}', [PostController::class, 'show']);

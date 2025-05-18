@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\DoctorResource;
 use App\Models\Task;
 use App\Models\Doctor;
 use App\Models\Patient;
@@ -123,7 +124,8 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'doctor' => Auth::guard('doctor')->user(),
+            'hasDoctor' => true,
+            'user' => new DoctorResource(Auth::guard('doctor')->user())
         ]);
     }
     public function registerDoctor(Request $request)
@@ -141,6 +143,7 @@ class AuthController extends Controller
             'available_working_hours' => 'required|string',
             'gender' => 'required|in:male,female,other',
             'image' => 'nullable|image|mimes:jpg,png,jpeg',
+            'bio' => 'required|string|max:255',
         ]);
     
         $validatedData['password'] = Hash::make($request->password);

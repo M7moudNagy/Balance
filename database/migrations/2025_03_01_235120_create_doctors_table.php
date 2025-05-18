@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('phone_number');
             $table->string('email')->unique();
             $table->string('password');
-
+            $table->string('bio');
             $table->string('specialization');
             $table->string('medical_license_number')->unique();
             $table->integer('years_of_experience');

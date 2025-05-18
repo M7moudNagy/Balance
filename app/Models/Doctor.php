@@ -17,11 +17,6 @@ class Doctor extends Authenticatable implements JWTSubject
     use Notifiable;
     protected $guarded = [];
 
-    protected $casts = [
-        'other_certifications' => 'array',
-        'licensed_provider' => 'boolean',
-        'agree_terms' => 'boolean'
-    ];
     public function getJWTIdentifier()
     {
         return $this->getKey();
