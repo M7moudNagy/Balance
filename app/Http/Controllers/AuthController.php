@@ -142,7 +142,7 @@ class AuthController extends Controller
             'work_address' => 'required|string',
             'available_working_hours' => 'required|string',
             'gender' => 'required|in:male,female,other',
-            'image' => 'nullable|image|mimes:jpg,png,jpeg',
+            'image' => 'required|image|mimes:jpg,png,jpeg',
             'bio' => 'required|string|max:255',
         ]);
     
@@ -173,5 +173,4 @@ class AuthController extends Controller
         JWTAuth::invalidate(JWTAuth::getToken());
         return response()->json(['message' => 'Successfully logged out']);
     }
-
 }

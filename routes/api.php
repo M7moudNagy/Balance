@@ -48,16 +48,16 @@ Route::post('/check_email', [ForgetPasswordController::class, 'checkEmail']);
 | Routes Requiring Authentication
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth:patient')->prefix('patient')->group(function () {
+Route::middleware('auth:patient,doctor')->prefix('patient')->group(function () {
+    Route::get('/task-me', [PatientController::class, 'task_me']);
     Route::get('/{id}', [PatientController::class, 'show']); 
     Route::put('/{id}', [PatientController::class, 'update']);
     Route::delete('/{id}', [PatientController::class, 'destroy']);
     Route::get('/dashboard', [PatientController::class, 'dashboard']);
-    Route::get('/tasks/{patient_id}', [PatientController::class, 'index']);  // مهام البيشنت
     Route::get('/tips/{tipId}/view', [PatientController::class, 'viewTip']);
 });
 
-Route::middleware('auth:doctor')->prefix('doctor')->group(function () {
+Route::middleware('auth:doctor,patient')->group(function () {
     Route::get('/dashboard', [DoctorController::class, 'dashboard']);
     Route::get('/my_patients', [DoctorController::class, 'my_patients']);
     Route::get('/my_patient/{patient_id}', [DoctorController::class, 'getPatientById']);
@@ -94,7 +94,8 @@ Route::middleware('auth:patient,doctor')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth:doctor')->group(function () {
+Route::middleware('auth:patient,doctor')->group(function () {
+    Route::get('/my_patients_tasks/{patient_id}', [DoctorController::class, 'my_patients_tasks']);
     Route::resource('/task', TaskController::class);
     Route::resource('/question', QuestionController::class);
     Route::resource('/response', ResponseController::class);

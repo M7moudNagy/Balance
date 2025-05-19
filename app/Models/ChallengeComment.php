@@ -16,7 +16,7 @@ class ChallengeComment extends Model
         return $this->morphTo();
     }
 
-    public function post()
+    public function challange()
     {
         return $this->belongsTo(Challenge::class);
     }

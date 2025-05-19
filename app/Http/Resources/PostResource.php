@@ -2,17 +2,20 @@
 namespace App\Http\Resources;
 
 use App\Traits\HasUserImage;
+use App\Traits\StatusOfChallengeOrPost;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PostResource extends JsonResource
 {
     use HasUserImage;
+    use StatusOfChallengeOrPost;
 
     public function toArray($request)
     {
 
         return [
             'id' => $this->id,
+            'status' => $this->StatusOfChallengeOrPost($this->resource),
             'content' => $this->content,
             'image' => $this->image,
             'created_at' => $this->created_at,

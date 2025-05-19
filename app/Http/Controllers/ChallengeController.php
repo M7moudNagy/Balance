@@ -36,7 +36,7 @@ class ChallengeController extends Controller
             $data['image'] = $request->file('image')->store('challenges', 'public');
         }
 
-        $challenge = Challenge::create($data);
+        Challenge::create($data);
 
         return response()->json([
             'message' => 'Challenge created successfully',

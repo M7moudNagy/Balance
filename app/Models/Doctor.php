@@ -54,6 +54,10 @@ class Doctor extends Authenticatable implements JWTSubject
     {
         return $this->morphMany(Post::class, 'user');
     }
+    public function challengs()
+    {
+        return $this->morphMany(Challenge::class, 'user');
+    }
 
 
 

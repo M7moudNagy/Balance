@@ -102,9 +102,18 @@ class PatientController extends Controller
 
         return $consecutiveDays;
     }
-    public function index($patientId)
+    public function task_me()
     {
-        $tasks = PatientTask::where('patient_id', $patientId)->get();
+        $patient = auth('patient')->user();
+        $patientId = $patient->id;
+        if (!$patient) {
+            return response()->json(['message' => 'المريض غير مسجل دخول']);
+        }
+
+        $tasks = PatientTask::with('task')->where('patient_id', $patient->id)->get();
+        if ($tasks->isEmpty()) {
+            return response()->json(['message' => 'لا يوجد مهام']);
+        }
 
         $totalTasks = $tasks->count();
         $completedTasks = $tasks->where('status', 'Completed')->count();
@@ -125,7 +134,7 @@ class PatientController extends Controller
                     'task_id' => $pt->task_id,
                     'name' => $pt->task->name ?? null,
                     'task_points' => $pt->task->task_points ?? null,
-                    'target_date' => $pt->target_date,
+                    'target_date' => $pt->task->target_date,
                 ];
             });
 
