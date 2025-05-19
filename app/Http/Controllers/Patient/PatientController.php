@@ -6,13 +6,14 @@ use App\Models\Tip;
 use App\Models\Task;
 use App\Models\Patient;
 use App\Models\PatientTask;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Resources\DoctorResource;
 use App\Http\Resources\PatientResource;
-use Illuminate\Http\Request as HttpRequest;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request as HttpRequest;
 
 class PatientController extends Controller
 {
@@ -188,4 +189,27 @@ class PatientController extends Controller
             'overdueTasks' => $overdueTasks,
         ]);
     }
+    
+    public function getDoctorsByPatientId()
+{
+    $patientId = auth('patient')->user()->id;
+    $patient = Patient::find($patientId);
+
+    if (!$patient) {
+        return response()->json(['message' => 'Patient not found'], 404);
+    }
+
+    $doctor = $patient->doctors()->first();
+
+    if (!$doctor) {
+        return response()->json(['message' => 'No doctor assigned to this patient'], 404);
+    }
+
+    return response()->json([
+        'my_doctor' => new DoctorResource($doctor)
+        // 'doctors' => $doctor
+
+    ]);
+}
+
 }   

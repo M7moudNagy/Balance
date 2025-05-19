@@ -78,6 +78,9 @@ Route::middleware('auth:doctor,patient')->group(function () {
     Route::get('/assigned-patient/details', [DoctorPatientController::class, 'getPatientDetailsForAssignment']);
     Route::get('/unassigned-doctor/{doctor_id}', [DoctorPatientController::class, 'unassignDoctorFromPatient']);
     Route::get('/dashboard/summary/{doctorId}', [DoctorController::class, 'getDoctorSummary']);
+    Route::get('/my_doctor', [PatientController::class, 'getDoctorsByPatientId']);
+
+    
 
     Route::prefix('doctors')->group(function () {
         Route::post('{id}/increment-view', [DoctorStatisticController::class, 'incrementDoctorView']);
