@@ -20,7 +20,7 @@ class PatientController extends Controller
     public function show($id)
     {
         $patient = Patient::findOrFail($id); 
-
+        
         return new PatientResource($patient);
     }
     public function update(Request $request, $id)

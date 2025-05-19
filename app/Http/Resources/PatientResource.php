@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Traits\HasDoctor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -9,6 +10,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class PatientResource extends JsonResource
 {
+    use HasDoctor;
+
     /**
      * Transform the resource into an array.
      *
@@ -25,7 +28,8 @@ class PatientResource extends JsonResource
             'Age' => $this->age,
             'City' => $this->city,
             'Gander' => $this->gander,
-            'Avatar' => Storage::url('avatars/' . $this->avatar), // توليد رابط الصورة
+            'Avatar' => Storage::url('avatars/' . $this->avatar),
+            'has_doctor'=>$this->HasDoctor($this->id), // توليد رابط الصورة
             //        "Email Verified At"=> $this->email_verified_at,
 //        "Password"=> $this->password,
 //        "Doctor ID"=> $this->doctor_id,

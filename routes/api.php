@@ -45,16 +45,27 @@ Route::post('/check_email', [ForgetPasswordController::class, 'checkEmail']);
 
 /*
 |--------------------------------------------------------------------------
+| Routes for Both Authenticated (Patient or Doctor)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth:patient,doctor')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/refresh', [AuthController::class, 'refresh']);
+});
+/*
+|--------------------------------------------------------------------------
 | Routes Requiring Authentication
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:patient,doctor')->prefix('patient')->group(function () {
     Route::get('/task-me', [PatientController::class, 'task_me']);
     Route::get('/{id}', [PatientController::class, 'show']); 
+    Route::get('/dashboard', [PatientController::class, 'dashboard']);
+});
+Route::middleware('auth:doctor')->prefix('patient')->group(function () {
     Route::put('/{id}', [PatientController::class, 'update']);
     Route::delete('/{id}', [PatientController::class, 'destroy']);
-    Route::get('/dashboard', [PatientController::class, 'dashboard']);
-    Route::get('/tips/{tipId}/view', [PatientController::class, 'viewTip']);
 });
 
 Route::middleware('auth:doctor,patient')->group(function () {
@@ -63,29 +74,17 @@ Route::middleware('auth:doctor,patient')->group(function () {
     Route::get('/my_patient/{patient_id}', [DoctorController::class, 'getPatientById']);
     Route::put('/patients/{patient_id}/status', [DoctorController::class, 'updatePatientStatus']);
     Route::get('/my_patient_tasks/{patient_id}', [DoctorController::class, 'my_patients_tasks']);
-    Route::get('/my_patient_forms/{id}', [DoctorController::class, 'my_patients_forms']);
     Route::post('/assign-doctor/{doctor_id}', [DoctorPatientController::class, 'assignDoctorToPatient']);
     Route::get('/assigned-patient/details', [DoctorPatientController::class, 'getPatientDetailsForAssignment']);
     Route::get('/unassigned-doctor/{doctor_id}', [DoctorPatientController::class, 'unassignDoctorFromPatient']);
     Route::get('/dashboard/summary/{doctorId}', [DoctorController::class, 'getDoctorSummary']);
 
-    Route::prefix('statistics')->group(function () {
+    Route::prefix('doctors')->group(function () {
         Route::post('{id}/increment-view', [DoctorStatisticController::class, 'incrementDoctorView']);
         Route::post('{id}/rate', [DoctorStatisticController::class, 'rateDoctor']);
         Route::post('{id}/update-patient-count', [DoctorStatisticController::class, 'updateDoctorPatientCount']);
         Route::get('{id}/statistics', [DoctorStatisticController::class, 'getDoctorStatistics']);
     });
-});
-
-/*
-|--------------------------------------------------------------------------
-| Routes for Both Authenticated (Patient or Doctor)
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware('auth:patient,doctor')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::post('/refresh', [AuthController::class, 'refresh']);
 });
 
 /*
