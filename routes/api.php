@@ -102,7 +102,6 @@ Route::middleware('auth:patient,doctor')->group(function () {
     Route::resource('/question', QuestionController::class);
     Route::resource('/response', ResponseController::class);
 });
-
 /*
 |--------------------------------------------------------------------------
 | Task Status Update
@@ -123,6 +122,8 @@ Route::middleware('auth:doctor,patient')->group(function () {
     Route::delete('/posts/{id}', [PostController::class, 'destroy']);
     Route::post('/posts/{id}/like', [LikeController::class, 'toggle']);
     Route::post('/posts/{id}/comment', [CommentController::class, 'store']);
+});
+Route::middleware('auth:doctor,patient')->group(function () {
     Route::get('/challenges', [ChallengeController::class, 'index']);
     Route::get('/challenges/{id}', [ChallengeController::class, 'show']);
     Route::post('/challenges', [ChallengeController::class, 'store']);

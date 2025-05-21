@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('task_id');
             $table->text('question_text');
-            $table->enum('type', ['multiple_choice', 'yes_no', 'timer']);
             $table->integer('time_seconds')->nullable(); 
             $table->timestamps();
         });

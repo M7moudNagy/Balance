@@ -13,7 +13,6 @@ class DoctorStatistic extends Model
         'average_rating' => 'float',
     ];
     
-
     public function doctor()
     {
         return $this->belongsTo(Doctor::class, 'doctor_id');
@@ -24,18 +23,11 @@ class DoctorStatistic extends Model
         return $this->rating_count > 0 ? round($this->rating_sum / $this->rating_count, 1) : 0;
     }
     public function updateDoctorPatientCount()
-{
-    // جيب الدكتور المرتبط بالإحصائيات
-    $doctor = Doctor::find($this->doctor_id);
-
-    // احسب عدد المرضى المرتبطين بالدكتور
-    $patientsCount = $doctor->patients()->count();
-
-    // حدث القيمة وخزنها
-    $this->patients_count = $patientsCount;
-    $this->save();
-}
-
-    
+    {
+        $doctor = Doctor::find($this->doctor_id);
+        $patientsCount = $doctor->patients()->count();
+        $this->patients_count = $patientsCount;
+        $this->save();
+    }
 }
 

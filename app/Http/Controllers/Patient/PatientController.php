@@ -112,10 +112,10 @@ class PatientController extends Controller
         }
 
         $tasks = PatientTask::with('task')->where('patient_id', $patient->id)->get();
-        if ($tasks->isEmpty()) {
-            return response()->json(['message' => 'لا يوجد مهام']);
-        }
-
+        // if ($tasks->isEmpty()) {
+        //     return response()->json(['message' => 'لا يوجد مهام']);
+        // }
+        $points = $patient->points;
         $totalTasks = $tasks->count();
         $completedTasks = $tasks->where('status', 'Completed')->count();
 
@@ -148,7 +148,7 @@ class PatientController extends Controller
                     'task_id' => $pt->task_id,
                     'name' => $pt->task->name ?? null,
                     'task_points' => $pt->task->task_points ?? null,
-                    'target_date' => $pt->target_date,
+                    'target_date' => $pt->task->target_date,
                 ];
             });
 
@@ -161,7 +161,7 @@ class PatientController extends Controller
                     'task_id' => $pt->task_id,
                     'name' => $pt->task->name ?? null,
                     'task_points' => $pt->task->task_points ?? null,
-                    'target_date' => $pt->target_date,
+                    'target_date' => $pt->task->target_date,
                     'completed_at' => $pt->completed_at,
                 ];
             });
@@ -175,12 +175,13 @@ class PatientController extends Controller
                     'task_id' => $pt->task_id,
                     'name' => $pt->task->name ?? null,
                     'task_points' => $pt->task->task_points ?? null,
-                    'target_date' => $pt->target_date,
+                    'target_date' => $pt->task->target_date,
                 ];
             });
 
         return response()->json([
             'patient_id' => $patientId,
+            'points'=> $points,
             'completion_percentage' => $completionPercentage,
             'consecutive_commitment_days' => $consecutiveDays,
             'pendingTasks' => $pendingTasks,

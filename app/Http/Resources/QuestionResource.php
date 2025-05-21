@@ -18,7 +18,6 @@ class QuestionResource extends JsonResource
             'id' => $this->id,
             'task_id' => $this->task_id,
             'question_text' => $this->question_text,
-            'type' => $this->type,
             'time_seconds' => $this->time_seconds,
             'options' => OptionResource::collection($this->whenLoaded('options')),
         ];

@@ -48,11 +48,15 @@ class ResponseController extends Controller
                 $patient->save();
             }
         }
-        $updateStatus = PatientTask::where('patient_id',$request->patient_id)->first();
-        $updateStatus->status = "Completed";
-        $updateStatus->completed_at =now();
-        $updateStatus->save();
+        $patientTask = PatientTask::where('patient_id', $request->patient_id)
+        ->where('task_id', $request->task_id)
+        ->first();
 
+        if ($patientTask) {
+            $patientTask->status = "Completed";
+            $patientTask->completed_at = now();
+            $patientTask->save();
+        }
         return response()->json(['message' => 'Answers saved successfully']);
     }
     

@@ -15,45 +15,59 @@ use App\Http\Resources\PatientResource;
 
 class TaskController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+   
     public function index()
     {
         $tasks = Task::all();
-        return response()->json(['tasks' => $tasks]);
+        // return response()->json(['tasks' => $tasks]);
+        return TaskResource::collection($tasks);
     }
 
     public function store(Request $request)
     {
+        $doctor_id = auth('doctor')->id();
+
+        $request->validate([
+            'name' => 'required|string',
+            'type' => 'required|in:timer,multiple_choice,yes_no',
+            'task_points' => 'required|integer',
+            'target_date' => 'required|date',
+            'questions' => 'required|array|min:1',
+            'questions.*.question_text' => 'required|string',
+            'questions.*.time_seconds' => 'required_if:type,timer|nullable|integer',
+            'questions.*.options' => 'required_if:type,multiple_choice|array|nullable',
+        ]);
+        
         if ($request->has('patient_ids')) {
             $validPatients = DoctorPatient::whereIn('patient_id', $request->patient_ids)
-                ->where('doctor_id', $request->doctor_id)
+                ->where('doctor_id', $doctor_id)
                 ->pluck('id')
                 ->toArray();
 
-                $task = Task::create([
-                    'name' => $request->name,
-                    'doctor_id' => $request->doctor_id,
-                    'task_points' => $request->task_points,
-                    'target_date' => $request->target_date
+            $task = Task::create([
+                'name' => $request->name,
+                'type' => $request->type,
+                'doctor_id' => $doctor_id,
+                'task_points' => $request->task_points,
+                'target_date' => $request->target_date
+            ]);
+
+            foreach ($request->questions as $q) {
+                $question = $task->questions()->create([
+                    'question_text' => $q['question_text'],
+                    'time_seconds' => $request->type === 'timer' ? $q['time_seconds'] : null
                 ]);
 
-                foreach ($request->questions as $q) {
-                    $question = $task->questions()->create([
-                        'question_text' => $q['question_text'],
-                        'type' => $q['type'],
-                        'time_seconds' => $q['type'] === 'timer' ? $q['time_seconds'] : null
-                    ]);
-            
-                    if ($q['type'] === 'multiple_choice' && isset($q['options'])) {
-                        foreach ($q['options'] as $optionText) {
-                            $question->options()->create(['text' => $optionText]);
-                        }
+                if ($request->type === 'multiple_choice' && isset($q['options'])) {
+                    foreach ($q['options'] as $optionText) {
+                        $question->options()->create(['text' => $optionText]);
                     }
                 }
-                $task->patients()->attach($validPatients);
+            }
+
+            $task->patients()->attach($validPatients);
         }
+
         return response()->json(['message' => 'Task created successfully']);
     }
 

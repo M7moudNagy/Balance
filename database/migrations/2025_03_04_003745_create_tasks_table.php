@@ -17,6 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('doctor_id'); // العلاقة بالدكتور
             $table->integer('task_points')->default(0);
             $table ->date('target_date')->nullable();
+            $table->enum('type', ['multiple_choice', 'yes_no', 'timer']);
             $table->timestamps();
         });
     }
