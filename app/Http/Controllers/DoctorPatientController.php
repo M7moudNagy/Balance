@@ -81,6 +81,7 @@ class DoctorPatientController extends Controller
             'age'           => $patient->age,
         ]);
     }
+    
     public function unassignDoctorFromPatient($doctor_id)
     {
         $user = auth('patient')->user();

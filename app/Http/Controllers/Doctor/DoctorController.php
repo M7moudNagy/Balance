@@ -7,22 +7,26 @@ use App\Models\Form;
 use App\Models\Task;
 use App\Models\Doctor;
 use App\Models\Patient;
+use App\Models\Session;
 use App\Models\PatientTip;
 use App\Models\PatientForm;
 use App\Models\PatientTask;
 use Illuminate\Http\Request;
 use mysql_xdevapi\Collection;
 use App\Models\DoctorStatistic;
+use App\Models\SessionTemplate;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\DoctorResource;
+use App\Traits\HasSessionCalculations;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\PatientTasksResource;
 use App\Http\Resources\TopRatedDoctorsResource;
 
 class DoctorController extends Controller
 {
+    use HasSessionCalculations;
     public function index()
     {
         return DoctorResource::collection(
@@ -180,6 +184,26 @@ class DoctorController extends Controller
                 ];
             });
 
+            $sessionTemplate = SessionTemplate::with('patient')->where('doctor_id', $doctor_id)->first();
+            if (!$sessionTemplate->recurrence_end_date) {
+                return response()->json(['error' => 'No recurrence_end_date found'], 404);
+            }
+
+            $sessions = Session::with('patient')
+                ->where('doctor_id', $doctor_id)
+                ->where('patient_id', $sessionTemplate->patient_id)
+                ->whereDate('date', '<=', $sessionTemplate->recurrence_end_date)
+                ->get();
+
+            $total = $this->hasSessionCalculations($sessionTemplate);
+            $completed = $sessions->where('status', 'completed')->count();
+            $missed = $sessions->where('status', 'missed')->count();
+            $remaining = $total - ($completed + $missed);
+                if ($remaining < 0) {
+                    $remaining = 0;
+                }
+
+
         return response()->json([
             'patient' => [
                 'fullname' => $patient->pivot->fullname,
@@ -191,10 +215,15 @@ class DoctorController extends Controller
                 'durationOfAddication' => $patient->pivot->durationOfAddication,
                 'startDateOfTreatment' => $patient->pivot->created_at ? $patient->pivot->created_at->toDateTimeString() : null,
                 'status' => $patient->pivot->status,
+                'total_sessions' => $total,
+                'completed_sessions' => $completed,
+                'missed_sessions' => $missed,
+                'remaining_sessions' => $remaining,
                 'pendingTasks' => $pendingTasks,
                 'inprogressTasks' => $inprogressTasks,
                 'completedTasks' => $completedTasksData,
                 'overdueTasks' => $overdueTasks,
+                'session_details' => $sessionTemplate->makeHidden('patient'),
             ]
         ]);
     }

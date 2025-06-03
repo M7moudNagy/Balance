@@ -14,9 +14,10 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\MassageController;
+use App\Http\Controllers\SessionController;
 use App\Http\Controllers\QuestionController;
-use App\Http\Controllers\ResponseController;
 
+use App\Http\Controllers\ResponseController;
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\ChallengeLikeController;
 use App\Http\Controllers\Doctor\DoctorController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\ForgetPasswordController;
 use App\Http\Controllers\DoctorStatisticController;
 use App\Http\Controllers\Patient\PatientController;
 use App\Http\Controllers\ChallengeCommentController;
+use App\Http\Controllers\SessionTemplateController;
 
 /*
 |--------------------------------------------------------------------------
@@ -131,7 +133,27 @@ Route::middleware('auth:doctor,patient')->group(function () {
     Route::post('/challenges/{id}/like', [ChallengeLikeController::class, 'toggle']);
     Route::post('/challenges/{id}/comment', [ChallengeCommentController::class, 'store']);
 });
+Route::middleware('auth:doctor,patient')->group(function () {
+    Route::get('/sessions', [SessionController::class, 'index']);
+    Route::get('/sessions/{session}', [SessionController::class, 'show']);
+    Route::post('/sessions', [SessionController::class, 'store']);
+    // Route::put('/sessions/{session}', [SessionController::class, 'update']);
+    // Route::delete('/sessions/{session}', [SessionController::class, 'destroy']);
+    Route::get('/doctor-sessions/{doctorId}', [SessionController::class, 'getDoctorSessions']);
+    Route::get('/patient-sessions', [SessionController::class, 'getPatientSessions']);
+    Route::get('/patientDailySessions/{id}', [SessionController::class, 'getPatientDailySessions']);
+    Route::get('/doctorDailySessions', [SessionController::class, 'getDoctorDailySessions']);
+    Route::get('/getAuthPatientDailySessions', [SessionController::class, 'getAuthPatientDailySessions']);
+    Route::get('/getPatientDoctorSessionStats', [SessionController::class, 'getPatientDoctorSessionStats']);
 
+});
+Route::middleware('auth:doctor,patient')->group(function () {
+    Route::get('/session-templates', [SessionTemplateController::class, 'index']);
+    Route::get('/session-templates/{id}', [SessionTemplateController::class, 'show']);
+    Route::post('/session-templates', [SessionTemplateController::class, 'store']);
+    // Route::put('/session-templates/{id}', [SessionTemplateController::class, 'update']);
+    // Route::delete('/session-templates/{id}', [SessionTemplateController::class, 'destroy']);
+});
 /*
 |--------------------------------------------------------------------------
 | Messaging & Calling (ممكن تحتاج auth حسب التطبيق)

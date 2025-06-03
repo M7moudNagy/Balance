@@ -17,9 +17,13 @@ class Kernel extends ConsoleKernel
             \App\Models\Challenge::where('created_at', '<', now()->subWeek())->delete();
         })->daily();
 
-        $schedule->call(function () {
-            Massage::where('created_at', '<', now()->subDays(30))->delete();
-        })->daily();
+        $schedule->command('sessions:generate-daily')->dailyAt('00:05');
+        $schedule->command('sessions:send-reminder')->everyMinute();
+        $schedule->command('sessions:mark-missed')->everyMinute();
+
+        // $schedule->call(function () {
+        //     Massage::where('created_at', '<', now()->subDays(30))->delete();
+        // })->daily();
     }
 
     /**

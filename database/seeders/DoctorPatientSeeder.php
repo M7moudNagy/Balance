@@ -20,13 +20,13 @@ class DoctorPatientSeeder extends Seeder
         }
 
         // تحقق من عدم الربط المسبق
-        $alreadyAssigned = DB::table('doctor_patient')
+        $alreadyAssigned = DB::table('doctor_patients')
             ->where('doctor_id', $doctor->id)
             ->where('patient_id', $patient->id)
             ->exists();
 
         if (!$alreadyAssigned) {
-            DB::table('doctor_patient')->insert([
+            DB::table('doctor_patients')->insert([
                 'doctor_id' => $doctor->id,
                 'patient_id' => $patient->id,
                 'fullname' => 'محمد عبد الله',
