@@ -116,6 +116,7 @@ Route::middleware('auth:doctor')->get('/tasks/{task_id}', [TaskController::class
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:doctor,patient')->group(function () {
+    Route::get('/doctor/analysis', [DoctorController::class, 'doctor_analysis']);
     Route::get('/top-rated-doctors', [DoctorController::class, 'top_rated_doctors']);
     Route::resource('/doctor', DoctorController::class);
     Route::get('/posts', [PostController::class, 'index']);
@@ -161,6 +162,9 @@ Route::middleware('auth:doctor,patient')->group(function () {
 */
 Route::middleware('auth:patient,doctor')->group(function () {
     Route::post('/messages/send', [MassageController::class, 'sendMessage']);
+    Route::put('/doctor/updateProfile', [DoctorController::class, 'update']);
+    Route::delete('/doctor/deleteaccount', [DoctorController::class,'destroy']);
+
 
     Route::post('/typing', function (Request $request) {
         event(new UserTyping(

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Doctor;
 
+use Carbon\Carbon;
 use App\Models\Tip;
 use App\Models\Form;
 use App\Models\Task;
@@ -12,6 +13,7 @@ use App\Models\PatientTip;
 use App\Models\PatientForm;
 use App\Models\PatientTask;
 use Illuminate\Http\Request;
+use App\Models\DoctorPatient;
 use mysql_xdevapi\Collection;
 use App\Models\DoctorStatistic;
 use App\Models\SessionTemplate;
@@ -39,9 +41,10 @@ class DoctorController extends Controller
         return new DoctorResource($doctor);
     }
 
-    public function updateDoctor(Request $request, $id)
+    public function update(Request $request)
     {
-        $doctor = Doctor::findOrFail($id);
+        $doctor_id= auth('doctor')->id();
+        $doctor = Doctor::findOrFail($doctor_id);
 
         $validatedData = $request->validate([
             'fullname' => 'sometimes|required|string',
@@ -81,14 +84,14 @@ class DoctorController extends Controller
         }
 
         return response()->json([
-            'message' => 'Doctor updated successfully',
-            'doctor' => $doctor,
+            'message' => 'Profile updated successfully',
         ]);
     }
 
-    public function deleteDoctor($id)
+    public function destroy()
     {
-        $doctor = Doctor::findOrFail($id);
+        $doctor_id= auth('doctor')->id();
+        $doctor = Doctor::findOrFail($doctor_id);
 
         if ($doctor->image) {
             Storage::disk('public')->delete($doctor->image);
@@ -244,7 +247,6 @@ class DoctorController extends Controller
 
         return response()->json(['message' => 'Status updated successfully.']);
     }
-
     public function my_patients_tasks($patient_id)
     {
         $doctor_id = auth('doctor')->id();
@@ -270,7 +272,6 @@ class DoctorController extends Controller
             }),
         ]);
     }
-
     public function myPatientsTasks()
     {
         $doctor_id = auth('doctor')->id();
@@ -286,8 +287,6 @@ class DoctorController extends Controller
             'patients' => $patients
         ]);
     }
-
-
     public function getDoctorSummary($doctorId)
     {
         // المرضى المربوطين بالدكتور ده
@@ -338,7 +337,6 @@ class DoctorController extends Controller
             'progress_over_time' => $progressOverTime
         ]);
     }
-
     public function top_rated_doctors()
     {
         $doctors = Doctor::with('statistics')
@@ -350,6 +348,106 @@ class DoctorController extends Controller
         ->values();
 
         return TopRatedDoctorsResource::collection($doctors);
+    }
+    private function calculateWeeklyProgress($doctorId)
+{
+    $thisWeek = Carbon::now('Africa/Cairo')->startOfWeek();
+    $lastWeek = Carbon::now('Africa/Cairo')->subWeek()->startOfWeek();
+
+    $thisWeekCount = Session::where('doctor_id', $doctorId)
+        ->whereBetween('date', [$thisWeek, now()])
+        ->count();
+
+    $lastWeekCount = Session::where('doctor_id', $doctorId)
+        ->whereBetween('date', [$lastWeek, $thisWeek])
+        ->count();
+
+    if ($lastWeekCount == 0) return '+100%';
+
+    $percentage = (($thisWeekCount - $lastWeekCount) / $lastWeekCount) * 100;
+
+    return ($percentage >= 0 ? '+' : '') . round($percentage) . '%';
+    }
+    public function getMonthlyTreatmentProgress($doctorId)
+{
+    $months = collect(range(1, 12))->map(function ($month) use ($doctorId) {
+        $recovered = DB::table('doctor_patients')
+            ->where('doctor_id', $doctorId)
+            ->whereMonth('updated_at', $month)
+            ->whereYear('updated_at', now()->year)
+            ->where('status', 'Full Recovery')
+            ->count();
+
+        $ongoing = DB::table('doctor_patients')
+            ->where('doctor_id', $doctorId)
+            ->whereMonth('updated_at', $month)
+            ->whereYear('updated_at', now()->year)
+            ->where('status', 'Under Treatment')
+            ->count();
+
+        return [
+            'month' => date('M', mktime(0, 0, 0, $month, 1)),
+            'recovered' => $recovered,
+            'ongoing' => $ongoing,
+        ];
+    });
+
+    return $months;
+    }
+    public function doctor_analysis(){
+        $doctor_id = auth('doctor')->id();
+        $startOfWeek = Carbon::now('Africa/Cairo')->copy()->startOfWeek();
+        $endOfWeek = Carbon::now('Africa/Cairo')->copy()    ->endOfWeek();
+        $totalPatients = DoctorPatient::where('doctor_id',$doctor_id)->count();
+        $patientTreated = DoctorPatient::where('status','Full Recovery')->count();
+        $sessionToday = Session::where('doctor_id',$doctor_id)->get()->count();
+        $recoveryStatus1 = DoctorPatient::where('status','Under Treatment')->count();
+        $recoveryStatus2 = DoctorPatient::where('status','Partial Recovery')->count();
+        
+        $newCases = DB::table('doctor_patients')
+            ->where('doctor_id', $doctor_id)
+            ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
+            ->count();
+
+        $recovered = DB::table('doctor_patients')
+            ->where('doctor_id', $doctor_id)
+            ->where('status', 'Full Recovery')
+            ->whereBetween('updated_at', [$startOfWeek, $endOfWeek])
+            ->count();
+
+        $sessionsCompleted = Session::where('doctor_id', $doctor_id)
+            ->where('status', 'completed')
+            ->whereBetween('date', [$startOfWeek, $endOfWeek])
+            ->count();
+        $todays_session=Session::where('doctor_id', $doctor_id)
+            ->whereDate('date', Carbon::today())
+            ->with('patient') // assuming relation exists
+            ->get()
+            ->map(function ($session) {
+                return [
+                    'patient_name' => $session->patient->name ?? 'N/A',
+                    'time' => Carbon::parse($session->time)->format('h:i A'),
+                    'status' => ucfirst($session->status),
+                ];
+            });
+        return response()->json([
+            'total_patients'=>$totalPatients,
+            'patientTreated'=>$patientTreated,
+            'sessionToday'=>$sessionToday,
+            'successRate' => $totalPatients > 0 ? round(($patientTreated / $totalPatients) * 100, 1): 0,
+            'patientRecoveryStatus'=>[
+                'fullRecovery' => $totalPatients > 0 ? round(($patientTreated / $totalPatients) * 100, 1) : 0,
+                'underTreatment' => $totalPatients > 0 ? round(($recoveryStatus1 / $totalPatients) * 100, 1) : 0,
+                'partialRecovery' => $totalPatients > 0 ? round(($recoveryStatus2 / $totalPatients) * 100, 1) : 0,
+
+            ],
+            'new_cases' => $newCases,
+            'recovered' => $recovered,
+            'sessions_completed' => $sessionsCompleted,
+            'progress_vs_last_week' => $this->calculateWeeklyProgress($doctor_id),
+            'dailySession'=> $todays_session,
+            'monthlyTreatmentProgress' =>$this->getMonthlyTreatmentProgress($doctor_id),
+        ]);
     }
 
 
